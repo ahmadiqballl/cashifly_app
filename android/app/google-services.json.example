@@ -1,41 +1,41 @@
 {
   "project_info": {
-    "project_number": "767120884210",
-    "project_id": "cashifly-id",
-    "storage_bucket": "cashifly-id.firebasestorage.app"
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "your-project-id",
+    "storage_bucket": "your-project-id.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:767120884210:android:a7f5664958295bb1c1ab6b",
+        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_ID",
         "android_client_info": {
           "package_name": "com.id.cashifly"
         }
       },
       "oauth_client": [
         {
-          "client_id": "767120884210-e252pg1h15hi1fkj4avum9n0opa71i48.apps.googleusercontent.com",
+          "client_id": "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.id.cashifly",
-            "certificate_hash": "0ec65a741106c2b4a4213f61179ba256a977e46d"
+            "certificate_hash": "YOUR_DEBUG_SHA1_HASH"
           }
         },
         {
-          "client_id": "767120884210-k1s6715ogk55l3ivfd2gghi4vehkculu.apps.googleusercontent.com",
+          "client_id": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDZjDyR7yTRnrzQjo_wuX0bE0FciRNI2j0"
+          "current_key": "YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "767120884210-k1s6715ogk55l3ivfd2gghi4vehkculu.apps.googleusercontent.com",
+              "client_id": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
