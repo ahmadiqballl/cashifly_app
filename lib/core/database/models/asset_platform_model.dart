@@ -106,7 +106,7 @@ class PlatformColors {
 
   // Bank — warna identitas masing-masing bank
   static const Map<String, int> bank = {
-    'Bank BRI':        0xFFE8192C, // merah BRI
+    'Bank BRI':        0xFF003087, // biru tua BRI
     'Bank BCA':        0xFF005BAA, // biru BCA
     'Bank Mandiri':    0xFF003087, // biru tua Mandiri
     'Bank BNI':        0xFFFF6B00, // oranye BNI

@@ -1,4 +1,5 @@
 import '../database_helper.dart';
+import '../models/asset_platform_model.dart';
 import '../models/transaction_model.dart';
 
 /// Repository untuk operasi CRUD transaksi keuangan.
@@ -20,6 +21,36 @@ class TransactionRepository {
       DatabaseHelper.tableTransactions,
       transaction.toMap(),
     );
+  }
+
+  /// Simpan transaksi dan perbarui saldo platform secara atomik dalam satu transaksi DB.
+  ///
+  /// - [income]: menambah saldo platform
+  /// - [expense]: mengurangi saldo platform (boleh negatif jika dikehendaki)
+  Future<int> insertWithBalanceUpdate({
+    required TransactionModel transaction,
+    required AssetPlatform platform,
+  }) async {
+    final db = await _db.database;
+    late int txId;
+    await db.transaction((txn) async {
+      txId = await txn.insert(
+        DatabaseHelper.tableTransactions,
+        transaction.toMap(),
+      );
+
+      final delta = transaction.type == TransactionType.income
+          ? transaction.amount
+          : -transaction.amount;
+
+      await txn.update(
+        DatabaseHelper.tableAssetPlatforms,
+        {'balance': platform.balance + delta},
+        where: 'id = ? AND user_id = ?',
+        whereArgs: [platform.id, platform.userId],
+      );
+    });
+    return txId;
   }
 
   // ── Read ───────────────────────────────────────────────────────────────────

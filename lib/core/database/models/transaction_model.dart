@@ -16,6 +16,9 @@ class TransactionModel {
   /// Format ISO-8601: "2026-11-01"
   final String date;
 
+  /// ID platform aset yang terkait (asset_platforms.id)
+  final int? platformId;
+
   const TransactionModel({
     this.id,
     required this.userId,
@@ -24,6 +27,7 @@ class TransactionModel {
     required this.category,
     this.note,
     required this.date,
+    this.platformId,
   });
 
   // ── Serialisasi ────────────────────────────────────────────────────────────
@@ -38,6 +42,7 @@ class TransactionModel {
       'category': category,
       'note': note,
       'date': date,
+      'platform_id': platformId,
     };
   }
 
@@ -54,6 +59,7 @@ class TransactionModel {
       category: map['category'] as String,
       note: map['note'] as String?,
       date: map['date'] as String,
+      platformId: map['platform_id'] as int?,
     );
   }
 
@@ -66,6 +72,7 @@ class TransactionModel {
     String? category,
     String? note,
     String? date,
+    int? platformId,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -75,11 +82,12 @@ class TransactionModel {
       category: category ?? this.category,
       note: note ?? this.note,
       date: date ?? this.date,
+      platformId: platformId ?? this.platformId,
     );
   }
 
   @override
   String toString() =>
       'TransactionModel(id: $id, userId: $userId, type: ${type.name}, '
-      'amount: $amount, category: $category, date: $date)';
+      'amount: $amount, category: $category, date: $date, platformId: $platformId)';
 }

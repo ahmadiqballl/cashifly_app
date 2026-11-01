@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 leadingIcon: const Icon(
                   Icons.mail_outline_rounded,
                   color: Colors.white,
-                  size: 22, // lebih besar
+                  size: 22,
                 ),
               ),
               const SizedBox(height: 28),
@@ -243,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _obscurePassword
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
-                    color: AppColors.textPrimary, // hitam
+                    color: AppColors.textPrimary,
                     size: 20,
                   ),
                   onPressed: () =>
@@ -361,7 +361,7 @@ class _AuthButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
             side: const BorderSide(
-              color: AppColors.textPrimary, // outline hitam
+              color: AppColors.textPrimary,
               width: 1.2,
             ),
           ),

@@ -180,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscurePassword
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: AppColors.textPrimary, // hitam
+                          color: AppColors.textPrimary,
                           size: 20,
                         ),
                         onPressed: () => setState(
@@ -224,7 +224,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscureConfirm
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: AppColors.textPrimary, // hitam
+                          color: AppColors.textPrimary,
                           size: 20,
                         ),
                         onPressed: () =>
@@ -258,7 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                         side: const BorderSide(
-                          color: AppColors.textPrimary, // outline hitam
+                          color: AppColors.textPrimary,
                           width: 1.2,
                         ),
                       ),

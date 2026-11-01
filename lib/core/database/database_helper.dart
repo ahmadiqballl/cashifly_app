@@ -11,7 +11,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'cashifly.db';
-  static const int _dbVersion = 2; // v2: tambah tabel asset_platforms
+  static const int _dbVersion = 3; // v3: tambah kolom platform_id di transactions
 
   // Nama tabel
   static const String tableTransactions = 'transactions';
@@ -45,13 +45,14 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE $tableTransactions (
-        id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id   TEXT    NOT NULL,
-        type      TEXT    NOT NULL CHECK(type IN ('income', 'expense')),
-        amount    REAL    NOT NULL,
-        category  TEXT    NOT NULL,
-        note      TEXT,
-        date      TEXT    NOT NULL
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     TEXT    NOT NULL,
+        type        TEXT    NOT NULL CHECK(type IN ('income', 'expense')),
+        amount      REAL    NOT NULL,
+        category    TEXT    NOT NULL,
+        note        TEXT,
+        date        TEXT    NOT NULL,
+        platform_id INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL
       )
     ''');
 
@@ -89,6 +90,12 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       // Migrasi v1 → v2: tambah tabel asset_platforms
       await _createAssetPlatformsTable(db);
+    }
+    if (oldVersion < 3) {
+      // Migrasi v2 → v3: tambah kolom platform_id ke transactions
+      await db.execute(
+        'ALTER TABLE $tableTransactions ADD COLUMN platform_id INTEGER',
+      );
     }
   }
 

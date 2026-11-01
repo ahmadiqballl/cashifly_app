@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 import '../../../asset/presentation/screens/asset_detail_screen.dart';
+import 'add_transaction_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,10 +67,61 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // ── Kartu total aset ────────────────────────────────────────────
               _buildAssetCard(),
+              const SizedBox(height: 16),
+
+              // ── Tombol Pengeluaran & Pemasukan ──────────────────────────────
+              _buildQuickActions(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _openAddTransaction(TransactionType type) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AddTransactionScreen(initialType: type),
+      ),
+    );
+    if (saved == true) _load();
+  }
+
+  Widget _buildQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Transaksi',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickActionButton(
+                label: 'Pengeluaran',
+                icon: Icons.arrow_upward_rounded,
+                iconColor: AppColors.error,
+                onTap: () => _openAddTransaction(TransactionType.expense),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickActionButton(
+                label: 'Pemasukan',
+                icon: Icons.arrow_downward_rounded,
+                iconColor: AppColors.success,
+                onTap: () => _openAddTransaction(TransactionType.income),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -185,3 +238,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+// ── Quick Action Button ────────────────────────────────────────────────────────
+
+class _QuickActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.label,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: AppColors.accent,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.textPrimary, width: 1.2),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: iconColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 16),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontStyle: FontStyle.normal,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
