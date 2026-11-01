@@ -132,6 +132,43 @@ class AuthRepository {
     }
   }
 
+  /// Update display name of the current user
+  Future<void> updateDisplayName(String name) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'Tidak ada pengguna yang login.';
+      await user.updateDisplayName(name.trim());
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      throw _handleFirebaseAuthError(e);
+    } catch (e) {
+      throw 'Gagal memperbarui nama: $e';
+    }
+  }
+
+  /// Update password of the current user (requires reauthentication via currentPassword)
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw 'Tidak ada pengguna yang login.';
+      if (user.email == null) throw 'Akun tidak memiliki email.';
+
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleFirebaseAuthError(e);
+    } catch (e) {
+      throw 'Gagal memperbarui kata sandi: $e';
+    }
+  }
+
   /// Sign Out current user from Firebase & Google
   Future<void> signOut() async {
     try {
