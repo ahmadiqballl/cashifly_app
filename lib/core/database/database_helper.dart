@@ -11,10 +11,11 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'cashifly.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2; // v2: tambah tabel asset_platforms
 
   // Nama tabel
   static const String tableTransactions = 'transactions';
+  static const String tableAssetPlatforms = 'asset_platforms';
 
   Database? _database;
 
@@ -41,6 +42,7 @@ class DatabaseHelper {
   /// Dipanggil sekali saat database pertama kali dibuat
   Future<void> _onCreate(Database db, int version) async {
     debugPrint('DatabaseHelper: membuat tabel (versi $version)');
+
     await db.execute('''
       CREATE TABLE $tableTransactions (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,10 +55,29 @@ class DatabaseHelper {
       )
     ''');
 
-    // Index agar query per user_id + date lebih cepat
     await db.execute('''
       CREATE INDEX idx_transactions_user_date
       ON $tableTransactions (user_id, date)
+    ''');
+
+    await _createAssetPlatformsTable(db);
+  }
+
+  Future<void> _createAssetPlatformsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableAssetPlatforms (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     TEXT    NOT NULL,
+        type        TEXT    NOT NULL CHECK(type IN ('cash', 'bank', 'ewallet')),
+        name        TEXT    NOT NULL,
+        balance     REAL    NOT NULL DEFAULT 0,
+        color_value INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_asset_platforms_user
+      ON $tableAssetPlatforms (user_id)
     ''');
   }
 
@@ -64,7 +85,11 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     debugPrint(
         'DatabaseHelper: upgrade dari versi $oldVersion ke $newVersion');
-    // Tambahkan blok migrasi di sini jika skema berubah di versi mendatang
+
+    if (oldVersion < 2) {
+      // Migrasi v1 → v2: tambah tabel asset_platforms
+      await _createAssetPlatformsTable(db);
+    }
   }
 
   /// Tutup koneksi database (opsional, untuk testing)

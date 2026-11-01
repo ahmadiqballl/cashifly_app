@@ -15,7 +15,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
 
   static const List<String> _titles = [
-    'Beranda',
+    '', // Beranda — pakai logo
     'Aktivitas',
     'Akun',
   ];
@@ -30,7 +30,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_currentIndex]),
+        // Tab Beranda (index 0) → tampilkan logo PNG
+        // Tab lain → tampilkan teks judul
+        title: _currentIndex == 0
+            ? Image.asset(
+                'assets/icons/logo.png',
+                height: 30,
+                fit: BoxFit.contain,
+              )
+            : Text(_titles[_currentIndex]),
+        centerTitle: false, // logo rata kiri sesuai desain
       ),
       body: IndexedStack(
         index: _currentIndex,
