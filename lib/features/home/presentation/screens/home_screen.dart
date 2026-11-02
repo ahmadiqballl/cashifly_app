@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/database/models/asset_platform_model.dart';
 import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 import '../../../asset/presentation/screens/asset_detail_screen.dart';
+import '../widgets/asset_chart_card.dart';
 import 'add_transaction_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   double _totalBalance = 0;
+  List<AssetPlatform> _platforms = [];
   bool _isVisible = true;
   bool _isLoading = true;
 
@@ -30,10 +33,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _load() async {
     if (_userId.isEmpty) return;
     await _repo.initDefaultCash(_userId);
-    final total = await _repo.totalBalance(_userId);
+    final results = await Future.wait([
+      _repo.totalBalance(_userId),
+      _repo.getAll(_userId),
+    ]);
     if (mounted) {
       setState(() {
-        _totalBalance = total;
+        _totalBalance = results[0] as double;
+        _platforms = results[1] as List<AssetPlatform>;
         _isLoading = false;
       });
     }
@@ -60,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,10 +78,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // ── Tombol Pengeluaran & Pemasukan ──────────────────────────────
               _buildQuickActions(),
+              const SizedBox(height: 16),
+
+              // ── Diagram Aset ────────────────────────────────────────────────
+              _buildChartSection(),
+              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildChartSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Diagram Aset',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        AssetChartCard(platforms: _platforms),
+      ],
     );
   }
 
