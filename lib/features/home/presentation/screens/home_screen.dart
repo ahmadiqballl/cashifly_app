@@ -12,10 +12,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   final _repo = AssetRepository();
   final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
@@ -29,6 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _load();
   }
+
+  /// Public — allows parent (DashboardScreen) to trigger a data refresh via GlobalKey.
+  Future<void> reload() => _load();
 
   Future<void> _load() async {
     if (_userId.isEmpty) return;

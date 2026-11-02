@@ -134,15 +134,18 @@ class _AssetDetailScreenState extends State<AssetDetailScreen> {
               color: Colors.white, size: 26),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        centerTitle: true,
-        title: Image.asset(
-          'assets/icons/logo.png',
-          height: 28,
-          // logo terang karena bg biru — Flutter akan render as-is;
-          // jika logo gelap, pakai color filter untuk membuatnya putih
-          color: Colors.white,
-          colorBlendMode: BlendMode.srcIn,
-        ),
+        centerTitle: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Image.asset(
+              'assets/icons/logo.png',
+              height: 26,
+              color: Colors.white,
+              colorBlendMode: BlendMode.srcIn,
+            ),
+          ),
+        ],
       ),
 
       body: _isLoading
