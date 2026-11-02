@@ -55,6 +55,19 @@ class TransactionRepository {
 
   // ── Read ───────────────────────────────────────────────────────────────────
 
+  /// Ambil transaksi milik [userId] dalam 14 hari terakhir, diurutkan terbaru.
+  /// Sekaligus menghapus transaksi yang lebih tua dari 14 hari dari tabel log
+  /// (tabel transactions sendiri tidak dihapus — hanya query dibatasi).
+  Future<List<TransactionModel>> getRecent14Days(String userId) async {
+    final now = DateTime.now();
+    final from = now.subtract(const Duration(days: 14));
+    final fromStr =
+        '${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}';
+    final toStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    return getByDateRange(userId, from: fromStr, to: toStr);
+  }
+
   /// Ambil semua transaksi milik [userId], diurutkan terbaru di atas.
   Future<List<TransactionModel>> getAll(String userId) async {
     final db = await _db.database;

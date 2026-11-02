@@ -16,6 +16,9 @@ class TransactionModel {
   /// Format ISO-8601: "2026-11-01"
   final String date;
 
+  /// Format "HH:mm", contoh: "08:30"
+  final String time;
+
   /// ID platform aset yang terkait (asset_platforms.id)
   final int? platformId;
 
@@ -27,6 +30,7 @@ class TransactionModel {
     required this.category,
     this.note,
     required this.date,
+    this.time = '',
     this.platformId,
   });
 
@@ -42,6 +46,7 @@ class TransactionModel {
       'category': category,
       'note': note,
       'date': date,
+      'time': time,
       'platform_id': platformId,
     };
   }
@@ -59,6 +64,7 @@ class TransactionModel {
       category: map['category'] as String,
       note: map['note'] as String?,
       date: map['date'] as String,
+      time: (map['time'] as String?) ?? '',
       platformId: map['platform_id'] as int?,
     );
   }
@@ -72,6 +78,7 @@ class TransactionModel {
     String? category,
     String? note,
     String? date,
+    String? time,
     int? platformId,
   }) {
     return TransactionModel(
@@ -82,6 +89,7 @@ class TransactionModel {
       category: category ?? this.category,
       note: note ?? this.note,
       date: date ?? this.date,
+      time: time ?? this.time,
       platformId: platformId ?? this.platformId,
     );
   }

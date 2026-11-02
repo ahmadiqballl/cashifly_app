@@ -11,11 +11,12 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'cashifly.db';
-  static const int _dbVersion = 3; // v3: tambah kolom platform_id di transactions
+  static const int _dbVersion = 5; // v5: tambah kolom time ke transactions
 
   // Nama tabel
   static const String tableTransactions = 'transactions';
   static const String tableAssetPlatforms = 'asset_platforms';
+  static const String tableNotificationLog = 'notification_log';
 
   Database? _database;
 
@@ -52,6 +53,7 @@ class DatabaseHelper {
         category    TEXT    NOT NULL,
         note        TEXT,
         date        TEXT    NOT NULL,
+        time        TEXT    NOT NULL DEFAULT '',
         platform_id INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL
       )
     ''');
@@ -62,6 +64,7 @@ class DatabaseHelper {
     ''');
 
     await _createAssetPlatformsTable(db);
+    await _createNotificationLogTable(db);
   }
 
   Future<void> _createAssetPlatformsTable(Database db) async {
@@ -82,6 +85,23 @@ class DatabaseHelper {
     ''');
   }
 
+  Future<void> _createNotificationLogTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableNotificationLog (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    TEXT    NOT NULL,
+        title      TEXT    NOT NULL,
+        body       TEXT    NOT NULL,
+        created_at TEXT    NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_notification_log_user_created
+      ON $tableNotificationLog (user_id, created_at)
+    ''');
+  }
+
   /// Dipanggil saat versi database meningkat — untuk migrasi skema ke depan
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     debugPrint(
@@ -95,6 +115,16 @@ class DatabaseHelper {
       // Migrasi v2 → v3: tambah kolom platform_id ke transactions
       await db.execute(
         'ALTER TABLE $tableTransactions ADD COLUMN platform_id INTEGER',
+      );
+    }
+    if (oldVersion < 4) {
+      // Migrasi v3 → v4: tambah tabel notification_log
+      await _createNotificationLogTable(db);
+    }
+    if (oldVersion < 5) {
+      // Migrasi v4 → v5: tambah kolom time ke transactions
+      await db.execute(
+        "ALTER TABLE $tableTransactions ADD COLUMN time TEXT NOT NULL DEFAULT ''",
       );
     }
   }

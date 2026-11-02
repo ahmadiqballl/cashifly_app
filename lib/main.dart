@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
 import 'core/services/firebase_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/screens/auth_gate.dart';
 
@@ -15,6 +16,9 @@ void main() async {
     statusBarIconBrightness: Brightness.dark,   // Android
     statusBarBrightness: Brightness.light,       // iOS
   ));
+
+  // Inisialisasi notifikasi lokal
+  await NotificationService.instance.init();
 
   String? initError;
   try {

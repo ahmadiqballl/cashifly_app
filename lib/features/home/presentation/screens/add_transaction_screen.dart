@@ -6,6 +6,7 @@ import '../../../../core/database/models/asset_platform_model.dart';
 import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../asset/presentation/screens/asset_detail_screen.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -101,9 +102,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     setState(() => _isSaving = true);
     try {
+      // Ambil total sebelum transaksi
+      final totalSebelum = await _assetRepo.totalBalance(_userId);
+
       final today = DateTime.now();
       final dateStr =
           '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final timeStr =
+          '${today.hour.toString().padLeft(2, '0')}:${today.minute.toString().padLeft(2, '0')}';
 
       final tx = TransactionModel(
         userId: _userId,
@@ -114,6 +120,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ? null
             : _noteController.text.trim(),
         date: dateStr,
+        time: timeStr,
         platformId: _selectedPlatform!.id,
       );
 
@@ -121,6 +128,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         transaction: tx,
         platform: _selectedPlatform!,
       );
+
+      // Ambil total sesudah transaksi
+      final totalSesudah = await _assetRepo.totalBalance(_userId);
+
+      // Cek apakah ada kelipatan 100.000 yang dilewati
+      await _checkMilestone(totalSebelum, totalSesudah);
 
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
@@ -136,6 +149,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ));
+  }
+
+  /// Cek apakah total aset melewati kelipatan 100.000 antara [sebelum] dan [sesudah].
+  /// Jika iya, tampilkan notifikasi dengan total terbaru.
+  Future<void> _checkMilestone(double sebelum, double sesudah) async {
+    const step = 100000.0;
+    // Kelipatan 100rb tertinggi yang sudah dicapai sebelum transaksi
+    final batasSebelum = sebelum <= 0 ? 0 : (sebelum / step).floor() * step;
+    // Kelipatan 100rb tertinggi setelah transaksi
+    final batasSesudah = (sesudah / step).floor() * step;
+
+    if (batasSesudah > batasSebelum) {
+      // Ada kelipatan baru yang terlewati — kirim notifikasi
+      await NotificationService.instance
+          .showMilestone(sesudah, userId: _userId);
+    }
   }
 
   void _showInsufficientBalanceDialog(double currentBalance, double requested) {

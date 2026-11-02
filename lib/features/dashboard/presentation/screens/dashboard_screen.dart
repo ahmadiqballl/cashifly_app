@@ -101,16 +101,20 @@ class _DashboardScreenState extends State<DashboardScreen>
       onTap: _closeFab,
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
-        appBar: AppBar(
-          title: _currentIndex == 0
-              ? Image.asset(
-                  'assets/icons/logo.png',
-                  height: 30,
-                  fit: BoxFit.contain,
-                )
-              : Text(_titles[_currentIndex]),
-          centerTitle: false,
-        ),
+        // Tab Aktivitas (index 1) dan Akun (index 2 jika punya AppBar sendiri)
+        // tidak memerlukan AppBar dari DashboardScreen — mereka kelola sendiri.
+        appBar: _currentIndex == 1
+            ? null
+            : AppBar(
+                title: _currentIndex == 0
+                    ? Image.asset(
+                        'assets/icons/logo.png',
+                        height: 30,
+                        fit: BoxFit.contain,
+                      )
+                    : Text(_titles[_currentIndex]),
+                centerTitle: false,
+              ),
         body: _ScaleFadeTabSwitcher(
           index: _currentIndex,
           children: [
