@@ -111,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               : Text(_titles[_currentIndex]),
           centerTitle: false,
         ),
-        body: IndexedStack(
+        body: _ScaleFadeTabSwitcher(
           index: _currentIndex,
           children: [
             HomeScreen(key: _homeKey),
@@ -331,3 +331,75 @@ class _FabSubButton extends StatelessWidget {
     );
   }
 }
+
+// ── Scale+Fade tab switcher ───────────────────────────────────────────────────
+// The active tab scales in from 97→100% while fading in.
+// Background is always fully opaque — no blank flash.
+
+class _ScaleFadeTabSwitcher extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _ScaleFadeTabSwitcher({required this.index, required this.children});
+
+  @override
+  State<_ScaleFadeTabSwitcher> createState() => _ScaleFadeTabSwitcherState();
+}
+
+class _ScaleFadeTabSwitcherState extends State<_ScaleFadeTabSwitcher>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scale = Tween<double>(begin: 0.97, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+    _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+    _ctrl.value = 1.0;
+  }
+
+  @override
+  void didUpdateWidget(_ScaleFadeTabSwitcher old) {
+    super.didUpdateWidget(old);
+    if (old.index != widget.index) {
+      _ctrl
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, child) => FadeTransition(
+        opacity: _fade,
+        child: ScaleTransition(
+          scale: _scale,
+          child: child,
+        ),
+      ),
+      child: IndexedStack(
+        index: widget.index,
+        children: widget.children,
+      ),
+    );
+  }
+}
+
