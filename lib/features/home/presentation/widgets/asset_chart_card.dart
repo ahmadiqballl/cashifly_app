@@ -89,7 +89,7 @@ class _AssetChartCardState extends State<AssetChartCard> {
 
           // ── White inner box with PageView ────────────────────────────────────
           Container(
-            height: 230,
+            height: 240,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -295,6 +295,11 @@ class _BarChartView extends StatelessWidget {
 
   const _BarChartView({required this.platforms});
 
+  // Left margin reserved for Y-axis labels
+  static const double _yAxisWidth = 52.0;
+  // Number of horizontal gridlines (and Y labels)
+  static const int _gridCount = 4;
+
   @override
   Widget build(BuildContext context) {
     if (platforms.isEmpty) {
@@ -304,34 +309,82 @@ class _BarChartView extends StatelessWidget {
     final maxBalance = platforms.fold(0.0, (m, p) => math.max(m, p.balance));
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+      padding: const EdgeInsets.fromLTRB(4, 10, 12, 8),
       child: Column(
         children: [
+          // Chart area: Y-axis labels + bars
           Expanded(
-            child: CustomPaint(
-              painter: _BarPainter(platforms: platforms, maxBalance: maxBalance),
-              child: const SizedBox.expand(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          // X-axis labels
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: platforms.map((p) {
-              return Expanded(
-                child: Text(
-                  _shortName(p.name),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Y-axis labels ──────────────────────────────────────────
+                SizedBox(
+                  width: _yAxisWidth,
+                  child: LayoutBuilder(
+                    builder: (_, constraints) {
+                      final h = constraints.maxHeight;
+                      return Stack(
+                        children: List.generate(_gridCount + 1, (i) {
+                          // i=0 → top (max), i=gridCount → bottom (0)
+                          final fraction = i / _gridCount;
+                          final value = maxBalance * (1 - fraction);
+                          final top = h * fraction - 7;
+                          return Positioned(
+                            top: top.clamp(0.0, h - 14),
+                            right: 6,
+                            child: Text(
+                              _compactRupiah(value),
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.normal,
+                              ),
+                            ),
+                          );
+                        }),
+                      );
+                    },
                   ),
                 ),
-              );
-            }).toList(),
+
+                // ── Bar area ───────────────────────────────────────────────
+                Expanded(
+                  child: CustomPaint(
+                    painter: _BarPainter(
+                      platforms: platforms,
+                      maxBalance: maxBalance,
+                      gridCount: _gridCount,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // ── X-axis labels ────────────────────────────────────────────────
+          Row(
+            children: [
+              SizedBox(width: _yAxisWidth),
+              ...platforms.map((p) => Expanded(
+                    child: Text(
+                      _shortName(p.name),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        fontStyle: FontStyle.normal,
+                      ),
+                    ),
+                  )),
+            ],
           ),
         ],
       ),
@@ -343,44 +396,65 @@ class _BarChartView extends StatelessWidget {
     if (name.startsWith('Bank ')) return name.substring(5);
     return name;
   }
+
+  /// Compact format: 1.500.000 → "1,5Jt", 250.000 → "250Rb", 0 → "0"
+  String _compactRupiah(double value) {
+    if (value <= 0) return '0';
+    if (value >= 1000000000) {
+      return '${(value / 1000000000).toStringAsFixed(1)}M';
+    }
+    if (value >= 1000000) {
+      final v = value / 1000000;
+      return '${v % 1 == 0 ? v.toInt() : v.toStringAsFixed(1)}Jt';
+    }
+    if (value >= 1000) {
+      final v = value / 1000;
+      return '${v % 1 == 0 ? v.toInt() : v.toStringAsFixed(1)}Rb';
+    }
+    return value.toInt().toString();
+  }
 }
 
 class _BarPainter extends CustomPainter {
   final List<AssetPlatform> platforms;
   final double maxBalance;
+  final int gridCount;
 
-  _BarPainter({required this.platforms, required this.maxBalance});
+  _BarPainter({
+    required this.platforms,
+    required this.maxBalance,
+    required this.gridCount,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     if (maxBalance <= 0) return;
 
-    final count = platforms.length;
-    final barWidth = (size.width / count) * 0.55;
-    final gap = size.width / count;
-
-    // Faint horizontal gridlines (3 lines)
+    // Semi-transparent horizontal gridlines
     final gridPaint = Paint()
-      ..color = AppColors.border
+      ..color = AppColors.textSecondary.withValues(alpha: 0.18)
       ..strokeWidth = 0.8;
-    for (int i = 1; i <= 3; i++) {
-      final y = size.height * (1 - i / 4);
+    for (int i = 0; i <= gridCount; i++) {
+      final y = size.height * i / gridCount;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
+
+    // Bars
+    final count = platforms.length;
+    final barWidth = (size.width / count) * 0.55;
+    final slot = size.width / count;
 
     for (int i = 0; i < count; i++) {
       final p = platforms[i];
       final barHeight = (p.balance / maxBalance) * size.height * 0.92;
-      final left = gap * i + (gap - barWidth) / 2;
+      final left = slot * i + (slot - barWidth) / 2;
       final top = size.height - barHeight;
 
-      final rrect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(left, top, barWidth, barHeight),
-        const Radius.circular(5),
-      );
-
       canvas.drawRRect(
-        rrect,
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(left, top, barWidth, barHeight),
+          const Radius.circular(5),
+        ),
         Paint()..color = Color(p.colorValue),
       );
     }
@@ -388,7 +462,9 @@ class _BarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarPainter old) =>
-      old.platforms != platforms || old.maxBalance != maxBalance;
+      old.platforms != platforms ||
+      old.maxBalance != maxBalance ||
+      old.gridCount != gridCount;
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────

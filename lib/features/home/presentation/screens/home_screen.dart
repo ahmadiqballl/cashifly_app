@@ -76,12 +76,12 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildAssetCard(),
               const SizedBox(height: 16),
 
-              // ── Tombol Pengeluaran & Pemasukan ──────────────────────────────
-              _buildQuickActions(),
-              const SizedBox(height: 16),
-
               // ── Diagram Aset ────────────────────────────────────────────────
               _buildChartSection(),
+              const SizedBox(height: 16),
+
+              // ── Tombol Pengeluaran & Pemasukan ──────────────────────────────
+              _buildQuickActions(),
               const SizedBox(height: 8),
             ],
           ),
