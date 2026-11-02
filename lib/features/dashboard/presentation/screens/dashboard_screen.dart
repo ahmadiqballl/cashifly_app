@@ -152,7 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ],
         ),
-        floatingActionButton: _buildFab(),
+        floatingActionButton: _currentIndex == 0 ? _buildFab() : null,
       ),
     );
   }
