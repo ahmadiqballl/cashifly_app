@@ -2,6 +2,7 @@
 // This file defines the app's visual theme. Adjust the values below to customize colors, fonts, and component styles.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 
 class AppTheme {
@@ -26,16 +27,22 @@ class AppTheme {
 
       // ── AppBar ─────────────────────────────────────────────────────────────
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent, // Transparent AppBar background
-        elevation: 0, // No shadow
-        scrolledUnderElevation: 0, // No elevation when scrolled
-        centerTitle: true, // Center the title text
-        iconTheme: IconThemeData(color: AppColors.textPrimary), // Icon color
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: TextStyle(
-          color: AppColors.textPrimary, // Title text color
+          color: AppColors.textPrimary,
           fontSize: 17,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
+        ),
+        // Status bar icons hitam untuk AppBar transparan di atas bg putih
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
       ),
 

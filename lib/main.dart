@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
 import 'core/services/firebase_service.dart';
 import 'core/theme/app_theme.dart';
@@ -7,6 +8,13 @@ import 'features/auth/presentation/screens/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Status bar: ikon & teks hitam (cocok untuk layar putih)
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,   // Android
+    statusBarBrightness: Brightness.light,       // iOS
+  ));
 
   String? initError;
   try {
