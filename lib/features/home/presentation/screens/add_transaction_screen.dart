@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/database/models/asset_platform_model.dart';
 import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../core/services/image_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../asset/presentation/screens/asset_detail_screen.dart';
 
@@ -36,6 +40,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   AssetPlatform? _selectedPlatform;
   bool _isLoading = true;
   bool _isSaving = false;
+
+  /// Path gambar yang sudah dikompresi dan siap disimpan
+  String? _imagePath;
 
   @override
   void initState() {
@@ -80,6 +87,83 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return 'Rp$formattedInt,$decPart';
   }
 
+  // ── Gambar ─────────────────────────────────────────────────────────────────
+
+  Future<void> _pickImage(ImageSource source) async {
+    final path =
+        await ImageService.instance.pickAndCompress(source);
+    if (path != null && mounted) {
+      setState(() => _imagePath = path);
+    }
+  }
+
+  void _showImageSourceSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Pilih sumber gambar',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _SheetOption(
+                icon: Icons.camera_alt_rounded,
+                label: 'Kamera',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 10),
+              _SheetOption(
+                icon: Icons.photo_library_rounded,
+                label: 'Galeri',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _removeImage() {
+    // Hapus file dari disk juga
+    ImageService.instance.deleteImage(_imagePath);
+    setState(() => _imagePath = null);
+  }
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+
   Future<void> _handleSave() async {
     final rawText = _amountController.text.trim().replaceAll(',', '.');
     final amount = double.tryParse(rawText);
@@ -121,6 +205,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             : _noteController.text.trim(),
         date: dateStr,
         time: timeStr,
+        imagePath: _imagePath,
         platformId: _selectedPlatform!.id,
       );
 
@@ -310,6 +395,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     _buildSectionLabel('Keterangan (opsional)'),
                     const SizedBox(height: 10),
                     _buildNoteField(),
+                    const SizedBox(height: 22),
+
+                    // ── Upload Gambar ──────────────────────────────────────
+                    _buildSectionLabel('Foto Produk / Struk (opsional)'),
+                    const SizedBox(height: 10),
+                    _buildImagePicker(),
                     const SizedBox(height: 36),
 
                     // ── Tombol Simpan ──────────────────────────────────────
@@ -576,6 +667,122 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  // ── Image picker widget ────────────────────────────────────────────────────
+
+  Widget _buildImagePicker() {
+    if (_imagePath != null) {
+      // Tampilkan preview gambar yang sudah dipilih
+      return Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.file(
+              File(_imagePath!),
+              width: double.infinity,
+              height: 180,
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Tombol hapus gambar
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: _removeImage,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+          // Tombol ganti gambar
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: _showImageSourceSheet,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.edit_rounded, color: Colors.white, size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      'Ganti',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Tombol upload (belum ada gambar)
+    return GestureDetector(
+      onTap: _showImageSourceSheet,
+      child: Container(
+        width: double.infinity,
+        height: 110,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.border,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.add_photo_alternate_rounded,
+                color: AppColors.accent,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tambah foto produk atau struk',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSaveButton(bool isExpense, Color iconColor) {
     final isEmpty = _platforms.isEmpty;
     return SizedBox(
@@ -685,6 +892,53 @@ class _TypeChip extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Sheet option item ──────────────────────────────────────────────────────────
+
+class _SheetOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _SheetOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: AppColors.accent, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -6,6 +6,7 @@ import '../../../../core/database/repositories/asset_repository.dart';
 import '../../../asset/presentation/widgets/add_platform_sheet.dart';
 import '../../../home/presentation/screens/add_transaction_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
+import '../../../home/presentation/screens/transfer_balance_screen.dart';
 import '../../../activity/presentation/screens/activity_screen.dart';
 import '../../../account/presentation/screens/account_screen.dart';
 
@@ -77,6 +78,16 @@ class _DashboardScreenState extends State<DashboardScreen>
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => AddTransactionScreen(initialType: type),
+      ),
+    );
+    if (saved == true) _homeKey.currentState?.reload();
+  }
+
+  Future<void> _openTransferBalance() async {
+    _closeFab();
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const TransferBalanceScreen(),
       ),
     );
     if (saved == true) _homeKey.currentState?.reload();
@@ -183,11 +194,19 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ),
                 const SizedBox(height: 10),
                 _FabSubButton(
+                  label: 'Pindah Saldo',
+                  icon: Icons.swap_horiz_rounded,
+                  progress: _fabAnimation.value,
+                  delay: 0.06,
+                  onTap: _openTransferBalance,
+                ),
+                const SizedBox(height: 10),
+                _FabSubButton(
                   label: 'Pemasukan',
                   icon: Icons.arrow_downward_rounded,
                   iconColor: AppColors.success,
                   progress: _fabAnimation.value,
-                  delay: 0.08,
+                  delay: 0.12,
                   onTap: () => _openAddTransaction(TransactionType.income),
                 ),
                 const SizedBox(height: 10),
@@ -196,7 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   icon: Icons.arrow_upward_rounded,
                   iconColor: AppColors.error,
                   progress: _fabAnimation.value,
-                  delay: 0.16,
+                  delay: 0.18,
                   onTap: () => _openAddTransaction(TransactionType.expense),
                 ),
                 const SizedBox(height: 14),

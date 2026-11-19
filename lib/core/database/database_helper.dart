@@ -11,7 +11,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'cashifly.db';
-  static const int _dbVersion = 5; // v5: tambah kolom time ke transactions
+  static const int _dbVersion = 7; // v7: tipe transfer & to_platform_id
 
   // Nama tabel
   static const String tableTransactions = 'transactions';
@@ -46,15 +46,17 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE $tableTransactions (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id     TEXT    NOT NULL,
-        type        TEXT    NOT NULL CHECK(type IN ('income', 'expense')),
-        amount      REAL    NOT NULL,
-        category    TEXT    NOT NULL,
-        note        TEXT,
-        date        TEXT    NOT NULL,
-        time        TEXT    NOT NULL DEFAULT '',
-        platform_id INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id        TEXT    NOT NULL,
+        type           TEXT    NOT NULL CHECK(type IN ('income', 'expense', 'transfer')),
+        amount         REAL    NOT NULL,
+        category       TEXT    NOT NULL,
+        note           TEXT,
+        date           TEXT    NOT NULL,
+        time           TEXT    NOT NULL DEFAULT '',
+        image_path     TEXT,
+        platform_id    INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL,
+        to_platform_id INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL
       )
     ''');
 
@@ -126,6 +128,40 @@ class DatabaseHelper {
       await db.execute(
         "ALTER TABLE $tableTransactions ADD COLUMN time TEXT NOT NULL DEFAULT ''",
       );
+    }
+    if (oldVersion < 6) {
+      // Migrasi v5 → v6: tambah kolom image_path ke transactions
+      await db.execute(
+        'ALTER TABLE $tableTransactions ADD COLUMN image_path TEXT',
+      );
+    }
+    if (oldVersion < 7) {
+      // Migrasi v6 → v7: update CHECK constraint type agar dukung 'transfer' dan tambah to_platform_id
+      await db.execute('''
+        CREATE TABLE transactions_temp (
+          id             INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id        TEXT    NOT NULL,
+          type           TEXT    NOT NULL CHECK(type IN ('income', 'expense', 'transfer')),
+          amount         REAL    NOT NULL,
+          category       TEXT    NOT NULL,
+          note           TEXT,
+          date           TEXT    NOT NULL,
+          time           TEXT    NOT NULL DEFAULT '',
+          image_path     TEXT,
+          platform_id    INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL,
+          to_platform_id INTEGER REFERENCES $tableAssetPlatforms(id) ON DELETE SET NULL
+        )
+      ''');
+      await db.execute('''
+        INSERT INTO transactions_temp (id, user_id, type, amount, category, note, date, time, image_path, platform_id)
+        SELECT id, user_id, type, amount, category, note, date, time, image_path, platform_id FROM $tableTransactions
+      ''');
+      await db.execute('DROP TABLE $tableTransactions');
+      await db.execute('ALTER TABLE transactions_temp RENAME TO $tableTransactions');
+      await db.execute('''
+        CREATE INDEX idx_transactions_user_date
+        ON $tableTransactions (user_id, date)
+      ''');
     }
   }
 

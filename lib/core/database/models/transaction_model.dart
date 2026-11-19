@@ -1,5 +1,8 @@
-/// Tipe transaksi: pemasukan atau pengeluaran
-enum TransactionType { income, expense }
+/// Tipe transaksi: pemasukan, pengeluaran, atau transfer/pindah saldo
+enum TransactionType { income, expense, transfer }
+
+// Sentinel untuk membedakan "tidak di-pass" vs "null disengaja" di copyWith
+const Object _sentinel = Object();
 
 /// Model satu baris transaksi keuangan
 class TransactionModel {
@@ -19,8 +22,14 @@ class TransactionModel {
   /// Format "HH:mm", contoh: "08:30"
   final String time;
 
-  /// ID platform aset yang terkait (asset_platforms.id)
+  /// Path absolut file gambar yang sudah dikompresi, atau null jika tidak ada
+  final String? imagePath;
+
+  /// ID platform aset yang terkait (sumber jika transfer, atau akun untuk pemasukan/pengeluaran)
   final int? platformId;
+
+  /// ID platform tujuan (khusus untuk tipe transfer)
+  final int? toPlatformId;
 
   const TransactionModel({
     this.id,
@@ -31,7 +40,9 @@ class TransactionModel {
     this.note,
     required this.date,
     this.time = '',
+    this.imagePath,
     this.platformId,
+    this.toPlatformId,
   });
 
   // ── Serialisasi ────────────────────────────────────────────────────────────
@@ -41,13 +52,15 @@ class TransactionModel {
     return {
       if (id != null) 'id': id,
       'user_id': userId,
-      'type': type.name, // "income" atau "expense"
+      'type': type.name, // "income", "expense", atau "transfer"
       'amount': amount,
       'category': category,
       'note': note,
       'date': date,
       'time': time,
+      'image_path': imagePath,
       'platform_id': platformId,
+      'to_platform_id': toPlatformId,
     };
   }
 
@@ -65,7 +78,9 @@ class TransactionModel {
       note: map['note'] as String?,
       date: map['date'] as String,
       time: (map['time'] as String?) ?? '',
+      imagePath: map['image_path'] as String?,
       platformId: map['platform_id'] as int?,
+      toPlatformId: map['to_platform_id'] as int?,
     );
   }
 
@@ -79,7 +94,9 @@ class TransactionModel {
     String? note,
     String? date,
     String? time,
+    Object? imagePath = _sentinel,
     int? platformId,
+    int? toPlatformId,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -90,12 +107,16 @@ class TransactionModel {
       note: note ?? this.note,
       date: date ?? this.date,
       time: time ?? this.time,
+      imagePath: imagePath == _sentinel
+          ? this.imagePath
+          : imagePath as String?,
       platformId: platformId ?? this.platformId,
+      toPlatformId: toPlatformId ?? this.toPlatformId,
     );
   }
 
   @override
   String toString() =>
       'TransactionModel(id: $id, userId: $userId, type: ${type.name}, '
-      'amount: $amount, category: $category, date: $date, platformId: $platformId)';
+      'amount: $amount, category: $category, date: $date, platformId: $platformId, toPlatformId: $toPlatformId)';
 }

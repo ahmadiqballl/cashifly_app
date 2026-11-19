@@ -53,6 +53,43 @@ class TransactionRepository {
     return txId;
   }
 
+  /// Pindahkan saldo antar dua platform secara atomik dalam satu transaksi database.
+  ///
+  /// - Mengurangi saldo [fromPlatform] sebesar `transaction.amount`
+  /// - Menambah saldo [toPlatform] sebesar `transaction.amount`
+  /// - Mencatat riwayat transaksi bertipe `TransactionType.transfer`
+  Future<int> transferWithBalanceUpdate({
+    required TransactionModel transaction,
+    required AssetPlatform fromPlatform,
+    required AssetPlatform toPlatform,
+  }) async {
+    final db = await _db.database;
+    late int txId;
+    await db.transaction((txn) async {
+      txId = await txn.insert(
+        DatabaseHelper.tableTransactions,
+        transaction.toMap(),
+      );
+
+      // Kurangi saldo dari platform sumber
+      await txn.update(
+        DatabaseHelper.tableAssetPlatforms,
+        {'balance': fromPlatform.balance - transaction.amount},
+        where: 'id = ? AND user_id = ?',
+        whereArgs: [fromPlatform.id, fromPlatform.userId],
+      );
+
+      // Tambah saldo ke platform tujuan
+      await txn.update(
+        DatabaseHelper.tableAssetPlatforms,
+        {'balance': toPlatform.balance + transaction.amount},
+        where: 'id = ? AND user_id = ?',
+        whereArgs: [toPlatform.id, toPlatform.userId],
+      );
+    });
+    return txId;
+  }
+
   // ── Read ───────────────────────────────────────────────────────────────────
 
   /// Ambil transaksi milik [userId] dalam 14 hari terakhir, diurutkan terbaru.

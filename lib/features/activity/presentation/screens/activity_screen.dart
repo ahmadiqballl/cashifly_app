@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -5,6 +7,7 @@ import '../../../../core/database/models/notification_log_model.dart';
 import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/notification_log_repository.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../core/services/image_service.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -47,6 +50,14 @@ class _ActivityScreenState extends State<ActivityScreen>
   Future<void> _loadTransactions() async {
     final data = await _txRepo.getRecent14Days(_userId);
     if (mounted) setState(() { _transactions = data; _loadingTx = false; });
+
+    // Cleanup orphan images: hapus file yang tidak lagi direferensikan transaksi
+    final knownPaths = data
+        .where((tx) => tx.imagePath != null && tx.imagePath!.isNotEmpty)
+        .map((tx) => tx.imagePath!)
+        .toSet();
+    ImageService.instance.cleanupOrphans(knownPaths);
+    ImageService.instance.cleanupOldFiles();
   }
 
   Future<void> _loadNotifications() async {
@@ -230,11 +241,16 @@ class _ActivityScreenState extends State<ActivityScreen>
 
   Widget _buildTransactionTile(TransactionModel tx, {required bool isLast}) {
     final isIncome = tx.type == TransactionType.income;
-    final color = isIncome ? AppColors.success : AppColors.error;
-    final icon = isIncome
-        ? Icons.arrow_downward_rounded
-        : Icons.arrow_upward_rounded;
-    final prefix = isIncome ? '+' : '-';
+    final isTransfer = tx.type == TransactionType.transfer;
+    final color = isTransfer
+        ? AppColors.accentDark
+        : (isIncome ? AppColors.success : AppColors.error);
+    final icon = isTransfer
+        ? Icons.swap_horiz_rounded
+        : (isIncome
+            ? Icons.arrow_downward_rounded
+            : Icons.arrow_upward_rounded);
+    final prefix = isTransfer ? '' : (isIncome ? '+' : '-');
 
     // Baris subtitle: tampilkan waktu + catatan (jika ada)
     final hasTime = tx.time.isNotEmpty;
@@ -287,14 +303,53 @@ class _ActivityScreenState extends State<ActivityScreen>
                 ),
               )
             : null,
-        trailing: Text(
-          '$prefix${_formatRupiah(tx.amount)}',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-        ),
+        trailing: tx.imagePath != null && tx.imagePath!.isNotEmpty
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$prefix${_formatRupiah(tx.amount)}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTap: () => _showImagePreview(tx.imagePath!),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.file(
+                        File(tx.imagePath!),
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, st) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                '$prefix${_formatRupiah(tx.amount)}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+      ),
+    );
+  }
+
+  // ── Full-screen image preview ──────────────────────────────────────────────
+
+  void _showImagePreview(String imagePath) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _ImagePreviewScreen(imagePath: imagePath),
       ),
     );
   }
@@ -426,6 +481,38 @@ class _ActivityScreenState extends State<ActivityScreen>
               textAlign: TextAlign.center,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Full-screen image preview screen ──────────────────────────────────────────
+
+class _ImagePreviewScreen extends StatelessWidget {
+  final String imagePath;
+
+  const _ImagePreviewScreen({required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.file(
+            File(imagePath),
+            fit: BoxFit.contain,
+            errorBuilder: (ctx, err, st) => const Center(
+              child: Icon(Icons.broken_image_rounded,
+                  color: Colors.white54, size: 64),
+            ),
+          ),
         ),
       ),
     );
