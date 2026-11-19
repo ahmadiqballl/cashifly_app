@@ -8,6 +8,7 @@ import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/notification_log_repository.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../core/services/image_service.dart';
+import 'transaction_detail_screen.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -303,45 +304,46 @@ class _ActivityScreenState extends State<ActivityScreen>
                 ),
               )
             : null,
-        trailing: tx.imagePath != null && tx.imagePath!.isNotEmpty
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$prefix${_formatRupiah(tx.amount)}',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  GestureDetector(
-                    onTap: () => _showImagePreview(tx.imagePath!),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.file(
-                        File(tx.imagePath!),
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, st) => const SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Text(
-                '$prefix${_formatRupiah(tx.amount)}',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (tx.imagePath != null && tx.imagePath!.isNotEmpty) ...[
+              const Icon(
+                Icons.receipt_outlined,
+                size: 16,
+                color: AppColors.textMuted,
               ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              '$prefix${_formatRupiah(tx.amount)}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
+        onTap: () => _openTransactionDetail(tx),
       ),
     );
+  }
+
+  Future<void> _openTransactionDetail(TransactionModel tx) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TransactionDetailScreen(transaction: tx),
+      ),
+    );
+    _loadTransactions();
   }
 
   // ── Full-screen image preview ──────────────────────────────────────────────

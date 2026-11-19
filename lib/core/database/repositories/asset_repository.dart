@@ -50,6 +50,19 @@ class AssetRepository {
     return rows.map(AssetPlatform.fromMap).toList();
   }
 
+  /// Ambil satu platform berdasarkan [id] milik [userId].
+  Future<AssetPlatform?> getById(int id, String userId) async {
+    final db = await _db.database;
+    final rows = await db.query(
+      DatabaseHelper.tableAssetPlatforms,
+      where: 'id = ? AND user_id = ?',
+      whereArgs: [id, userId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return AssetPlatform.fromMap(rows.first);
+  }
+
   /// Total seluruh aset (jumlah semua balance) milik [userId].
   Future<double> totalBalance(String userId) async {
     final db = await _db.database;
