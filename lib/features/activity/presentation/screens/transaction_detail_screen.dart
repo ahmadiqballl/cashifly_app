@@ -290,42 +290,12 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                   // Platform / Akun
                   if (isTransfer) ...[
                     _buildDetailRow(
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: 'Platform Sumber & Tujuan',
+                      icon: Icons.arrow_outward_rounded,
+                      label: 'Platform Asal',
                       customWidget: _isLoadingPlatforms
                           ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.accent,
-                              ),
-                            )
-                          : Row(
-                              children: [
-                                if (_platform != null)
-                                  _buildPlatformBadge(_platform!),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 6),
-                                  child: Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 16,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                if (_toPlatform != null)
-                                  _buildPlatformBadge(_toPlatform!),
-                              ],
-                            ),
-                    ),
-                  ] else ...[
-                    _buildDetailRow(
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: 'Platform Aset',
-                      customWidget: _isLoadingPlatforms
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
+                              height: 18,
+                              width: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: AppColors.accent,
@@ -341,6 +311,55 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 )),
+                    ),
+                    _buildDetailRow(
+                      icon: Icons.arrow_downward_rounded,
+                      label: 'Platform Tujuan',
+                      customWidget: _isLoadingPlatforms
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accent,
+                              ),
+                            )
+                          : (_toPlatform != null
+                              ? _buildPlatformBadge(_toPlatform!)
+                              : const Text(
+                                  '-',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )),
+                      isLast: tx.note == null || tx.note!.isEmpty,
+                    ),
+                  ] else ...[
+                    _buildDetailRow(
+                      icon: Icons.account_balance_wallet_outlined,
+                      label: 'Platform Aset',
+                      customWidget: _isLoadingPlatforms
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accent,
+                              ),
+                            )
+                          : (_platform != null
+                              ? _buildPlatformBadge(_platform!)
+                              : const Text(
+                                  '-',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )),
+                      isLast: tx.note == null || tx.note!.isEmpty,
                     ),
                   ],
 
@@ -410,12 +429,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Ketuk untuk memperbesar foto',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                            const Expanded(
+                              child: Text(
+                                'Ketuk untuk memperbesar foto',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                             Container(
@@ -466,12 +487,16 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          p.name,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        Flexible(
+          child: Text(
+            p.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ],
@@ -499,7 +524,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 20, color: AppColors.textSecondary),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Text(
             label,
             style: const TextStyle(
@@ -508,21 +533,22 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const Spacer(),
-          if (customWidget != null)
-            customWidget
-          else if (value != null)
-            Flexible(
-              child: Text(
-                value,
-                textAlign: TextAlign.end,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: customWidget ??
+                  Text(
+                    value ?? '-',
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
             ),
+          ),
         ],
       ),
     );
