@@ -10,7 +10,6 @@ import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../core/services/image_service.dart';
-import '../../../asset/presentation/screens/asset_detail_screen.dart';
 import '../../../asset/presentation/widgets/add_platform_sheet.dart';
 
 class TransferBalanceScreen extends StatefulWidget {
@@ -218,7 +217,7 @@ class _TransferBalanceScreenState extends State<TransferBalanceScreen> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: _platforms.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (context, index) => const SizedBox(height: 8),
                   itemBuilder: (_, i) {
                     final p = _platforms[i];
                     final isCurrentSelected = isFrom

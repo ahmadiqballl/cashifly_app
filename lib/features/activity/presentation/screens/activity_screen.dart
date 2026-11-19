@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -346,16 +344,6 @@ class _ActivityScreenState extends State<ActivityScreen>
     _loadTransactions();
   }
 
-  // ── Full-screen image preview ──────────────────────────────────────────────
-
-  void _showImagePreview(String imagePath) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _ImagePreviewScreen(imagePath: imagePath),
-      ),
-    );
-  }
-
   // ── Tab Notifikasi ─────────────────────────────────────────────────────────
 
   Widget _buildNotificationTab() {
@@ -483,38 +471,6 @@ class _ActivityScreenState extends State<ActivityScreen>
               textAlign: TextAlign.center,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Full-screen image preview screen ──────────────────────────────────────────
-
-class _ImagePreviewScreen extends StatelessWidget {
-  final String imagePath;
-
-  const _ImagePreviewScreen({required this.imagePath});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          child: Image.file(
-            File(imagePath),
-            fit: BoxFit.contain,
-            errorBuilder: (ctx, err, st) => const Center(
-              child: Icon(Icons.broken_image_rounded,
-                  color: Colors.white54, size: 64),
-            ),
-          ),
         ),
       ),
     );
