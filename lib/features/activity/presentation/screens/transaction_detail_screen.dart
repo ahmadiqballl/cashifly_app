@@ -138,12 +138,6 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         ? AppColors.accentDark
         : (isIncome ? AppColors.success : AppColors.error);
 
-    final typeIcon = isTransfer
-        ? Icons.swap_horiz_rounded
-        : (isIncome
-            ? Icons.arrow_downward_rounded
-            : Icons.arrow_upward_rounded);
-
     final typeLabel = isTransfer
         ? 'Pindah Saldo'
         : (isIncome ? 'Pemasukan' : 'Pengeluaran');
@@ -217,7 +211,18 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(typeIcon, color: typeColor, size: 16),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.asset(
+                            isTransfer
+                                ? 'assets/icons/transfer_saldo.png'
+                                : (isIncome
+                                    ? 'assets/icons/pemasukan.png'
+                                    : 'assets/icons/pengeluaran.png'),
+                            width: 18,
+                            height: 18,
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           typeLabel,

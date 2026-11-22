@@ -132,19 +132,11 @@ class HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Ikon struk receipt
-                Container(
+                // Ikon export laporan
+                Image.asset(
+                  'assets/icons/export_laporan.png',
                   width: 46,
                   height: 46,
-                  decoration: BoxDecoration(
-                    color: AppColors.textPrimary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.receipt_long_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
                 ),
                 const SizedBox(width: 14),
                 // Teks
@@ -264,8 +256,7 @@ class HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _QuickActionButton(
                 label: 'Pengeluaran',
-                icon: Icons.arrow_upward_rounded,
-                iconColor: AppColors.error,
+                imageAsset: 'assets/icons/pengeluaran.png',
                 onTap: () => _openAddTransaction(TransactionType.expense),
               ),
             ),
@@ -273,8 +264,7 @@ class HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _QuickActionButton(
                 label: 'Pemasukan',
-                icon: Icons.arrow_downward_rounded,
-                iconColor: AppColors.success,
+                imageAsset: 'assets/icons/pemasukan.png',
                 onTap: () => _openAddTransaction(TransactionType.income),
               ),
             ),
@@ -402,14 +392,12 @@ class HomeScreenState extends State<HomeScreen> {
 
 class _QuickActionButton extends StatelessWidget {
   final String label;
-  final IconData icon;
-  final Color iconColor;
+  final String imageAsset;
   final VoidCallback onTap;
 
   const _QuickActionButton({
     required this.label,
-    required this.icon,
-    required this.iconColor,
+    required this.imageAsset,
     required this.onTap,
   });
 
@@ -427,14 +415,10 @@ class _QuickActionButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: iconColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.white, size: 16),
+            Image.asset(
+              imageAsset,
+              width: 30,
+              height: 30,
             ),
             const SizedBox(width: 8),
             Text(

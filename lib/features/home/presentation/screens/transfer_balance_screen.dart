@@ -471,14 +471,24 @@ class _TransferBalanceScreenState extends State<TransferBalanceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Header Layar ───────────────────────────────────────
-                    const Text(
-                      'Pindah Saldo',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.3,
-                      ),
+                    Row(
+                      children: [
+                        Image.asset(
+                          'assets/icons/transfer_saldo.png',
+                          width: 28,
+                          height: 28,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Pindah Saldo',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     const Text(
@@ -697,12 +707,12 @@ class _TransferBalanceScreenState extends State<TransferBalanceScreen> {
           fontWeight: FontWeight.w700,
           color: AppColors.textMuted,
         ),
-        prefixIcon: const Padding(
-          padding: EdgeInsets.only(left: 18, right: 12),
-          child: Icon(
-            Icons.swap_horiz_rounded,
-            color: AppColors.accentDark,
-            size: 24,
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 10),
+          child: Image.asset(
+            'assets/icons/transfer_saldo.png',
+            width: 26,
+            height: 26,
           ),
         ),
         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
@@ -920,12 +930,16 @@ class _TransferBalanceScreenState extends State<TransferBalanceScreen> {
                   color: Colors.white,
                 ),
               )
-            : const Row(
+            : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.swap_horiz_rounded, size: 22),
-                  SizedBox(width: 8),
-                  Text(
+                  Image.asset(
+                    'assets/icons/transfer_saldo.png',
+                    width: 22,
+                    height: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
                     'Pindah Saldo Sekarang',
                     style: TextStyle(
                       fontSize: 15,

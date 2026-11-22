@@ -437,15 +437,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           _TypeChip(
             label: 'Pengeluaran',
-            icon: Icons.arrow_upward_rounded,
-            iconColor: AppColors.error,
+            imageAsset: 'assets/icons/pengeluaran.png',
             isSelected: _type == TransactionType.expense,
             onTap: () => setState(() => _type = TransactionType.expense),
           ),
           _TypeChip(
             label: 'Pemasukan',
-            icon: Icons.arrow_downward_rounded,
-            iconColor: AppColors.success,
+            imageAsset: 'assets/icons/pemasukan.png',
             isSelected: _type == TransactionType.income,
             onTap: () => setState(() => _type = TransactionType.income),
           ),
@@ -477,13 +475,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           color: AppColors.textMuted,
         ),
         prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 18, right: 12),
-          child: Icon(
+          padding: const EdgeInsets.only(left: 16, right: 10),
+          child: Image.asset(
             _type == TransactionType.expense
-                ? Icons.arrow_upward_rounded
-                : Icons.arrow_downward_rounded,
-            color: iconColor,
-            size: 22,
+                ? 'assets/icons/pengeluaran.png'
+                : 'assets/icons/pemasukan.png',
+            width: 26,
+            height: 26,
           ),
         ),
         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
@@ -842,15 +840,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
 class _TypeChip extends StatelessWidget {
   final String label;
-  final IconData icon;
-  final Color iconColor;
+  final String imageAsset;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _TypeChip({
     required this.label,
-    required this.icon,
-    required this.iconColor,
+    required this.imageAsset,
     required this.isSelected,
     required this.onTap,
   });
@@ -875,12 +871,8 @@ class _TypeChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 14,
-                color: isSelected ? iconColor : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 5),
+              Image.asset(imageAsset, width: 20, height: 20),
+              const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(

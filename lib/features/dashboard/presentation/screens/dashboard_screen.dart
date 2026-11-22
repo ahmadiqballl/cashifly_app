@@ -195,7 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const SizedBox(height: 10),
                 _FabSubButton(
                   label: 'Pindah Saldo',
-                  icon: Icons.swap_horiz_rounded,
+                  imageAsset: 'assets/icons/transfer_saldo.png',
                   progress: _fabAnimation.value,
                   delay: 0.06,
                   onTap: _openTransferBalance,
@@ -203,8 +203,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const SizedBox(height: 10),
                 _FabSubButton(
                   label: 'Pemasukan',
-                  icon: Icons.arrow_downward_rounded,
-                  iconColor: AppColors.success,
+                  imageAsset: 'assets/icons/pemasukan.png',
                   progress: _fabAnimation.value,
                   delay: 0.12,
                   onTap: () => _openAddTransaction(TransactionType.income),
@@ -212,8 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const SizedBox(height: 10),
                 _FabSubButton(
                   label: 'Pengeluaran',
-                  icon: Icons.arrow_upward_rounded,
-                  iconColor: AppColors.error,
+                  imageAsset: 'assets/icons/pengeluaran.png',
                   progress: _fabAnimation.value,
                   delay: 0.18,
                   onTap: () => _openAddTransaction(TransactionType.expense),
@@ -266,16 +264,16 @@ class _DashboardScreenState extends State<DashboardScreen>
 
 class _FabSubButton extends StatelessWidget {
   final String label;
-  final IconData icon;
-  final Color iconColor;
+  final IconData? icon;
+  final String? imageAsset;
   final double progress;
   final double delay;
   final VoidCallback onTap;
 
   const _FabSubButton({
     required this.label,
-    required this.icon,
-    this.iconColor = Colors.white,
+    this.icon,
+    this.imageAsset,
     required this.progress,
     required this.delay,
     required this.onTap,
@@ -344,7 +342,10 @@ class _FabSubButton extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Icon(icon, color: iconColor, size: 20),
+                  clipBehavior: Clip.antiAlias,
+                  child: imageAsset != null
+                      ? Image.asset(imageAsset!, fit: BoxFit.cover)
+                      : Icon(icon, color: Colors.white, size: 20),
                 ),
               ],
             ),

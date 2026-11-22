@@ -244,11 +244,6 @@ class _ActivityScreenState extends State<ActivityScreen>
     final color = isTransfer
         ? AppColors.accentDark
         : (isIncome ? AppColors.success : AppColors.error);
-    final icon = isTransfer
-        ? Icons.swap_horiz_rounded
-        : (isIncome
-            ? Icons.arrow_downward_rounded
-            : Icons.arrow_upward_rounded);
     final prefix = isTransfer ? '' : (isIncome ? '+' : '-');
 
     // Baris subtitle: tampilkan waktu + catatan (jika ada)
@@ -272,14 +267,18 @@ class _ActivityScreenState extends State<ActivityScreen>
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color.withAlpha(26),
-            borderRadius: BorderRadius.circular(10),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(
+            isTransfer
+                ? 'assets/icons/transfer_saldo.png'
+                : (isIncome
+                    ? 'assets/icons/pemasukan.png'
+                    : 'assets/icons/pengeluaran.png'),
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
           ),
-          child: Icon(icon, color: color, size: 20),
         ),
         title: Text(
           tx.category,

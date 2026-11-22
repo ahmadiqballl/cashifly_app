@@ -269,18 +269,10 @@ class _ExportReportSheetState extends State<ExportReportSheet> {
           // ── Header Box ─────────────────────────────────────────────────────
           Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.textPrimary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.receipt_long_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
+              Image.asset(
+                'assets/icons/export_laporan.png',
+                width: 44,
+                height: 44,
               ),
               const SizedBox(width: 14),
               const Expanded(
