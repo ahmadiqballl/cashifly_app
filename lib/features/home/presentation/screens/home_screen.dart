@@ -8,6 +8,7 @@ import '../../../asset/presentation/screens/asset_detail_screen.dart';
 import '../widgets/asset_chart_card.dart';
 import '../widgets/export_report_sheet.dart';
 import 'add_transaction_screen.dart';
+import 'monthly_reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -88,7 +89,7 @@ class HomeScreenState extends State<HomeScreen> {
               _buildQuickActions(),
               const SizedBox(height: 16),
 
-              // ── Box Export Laporan ──────────────────────────────────────────
+              // ── Box Laporan Keuangan & Ekspor Cepat ─────────────────────────
               const Text(
                 'Laporan',
                 style: TextStyle(
@@ -98,7 +99,9 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              _buildExportBox(),
+              _buildMonthlyReportsBox(),
+              const SizedBox(height: 12),
+              _buildQuickExportBox(),
               const SizedBox(height: 8),
             ],
           ),
@@ -107,7 +110,129 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExportBox() {
+  Widget _buildMonthlyReportsBox() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.textPrimary, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MonthlyReportsScreen(),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Ikon Kalender Laporan
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.textPrimary,
+                      width: 1.2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.calendar_month_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                // Teks
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Laporan Keuangan',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Badge Bulanan
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Bulanan',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.accentDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      const Text(
+                        'Arsip laporan otomatis setiap tanggal 1',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Arrow
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickExportBox() {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -147,7 +272,7 @@ class HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           const Text(
-                            'Export Laporan',
+                            'Ekspor Laporan Cepat',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,

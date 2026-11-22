@@ -11,12 +11,13 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'cashifly.db';
-  static const int _dbVersion = 7; // v7: tipe transfer & to_platform_id
+  static const int _dbVersion = 8; // v8: tabel monthly_reports
 
   // Nama tabel
   static const String tableTransactions = 'transactions';
   static const String tableAssetPlatforms = 'asset_platforms';
   static const String tableNotificationLog = 'notification_log';
+  static const String tableMonthlyReports = 'monthly_reports';
 
   Database? _database;
 
@@ -67,6 +68,31 @@ class DatabaseHelper {
 
     await _createAssetPlatformsTable(db);
     await _createNotificationLogTable(db);
+    await _createMonthlyReportsTable(db);
+  }
+
+  Future<void> _createMonthlyReportsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableMonthlyReports (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id           TEXT    NOT NULL,
+        year              INTEGER NOT NULL,
+        month             INTEGER NOT NULL,
+        month_name        TEXT    NOT NULL,
+        total_income      REAL    NOT NULL DEFAULT 0,
+        total_expense     REAL    NOT NULL DEFAULT 0,
+        total_transfer    REAL    NOT NULL DEFAULT 0,
+        net_balance       REAL    NOT NULL DEFAULT 0,
+        transaction_count INTEGER NOT NULL DEFAULT 0,
+        created_at        TEXT    NOT NULL,
+        UNIQUE(user_id, year, month) ON CONFLICT REPLACE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_monthly_reports_user_year
+      ON $tableMonthlyReports (user_id, year, month)
+    ''');
   }
 
   Future<void> _createAssetPlatformsTable(Database db) async {
@@ -162,6 +188,10 @@ class DatabaseHelper {
         CREATE INDEX idx_transactions_user_date
         ON $tableTransactions (user_id, date)
       ''');
+    }
+    if (oldVersion < 8) {
+      // Migrasi v7 → v8: tambah tabel monthly_reports
+      await _createMonthlyReportsTable(db);
     }
   }
 
