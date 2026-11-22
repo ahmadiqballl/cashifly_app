@@ -20,6 +20,9 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
   final _assetRepo = AssetRepository();
   final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   bool _isLoading = true;
   bool _isGeneratingPdf = false;
   List<MonthlyReport> _reports = [];
@@ -29,6 +32,12 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -56,6 +65,46 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
       _platformNames = map;
       _isLoading = false;
     });
+  }
+
+  List<MonthlyReport> get _filteredReports {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return _reports;
+
+    return _reports.where((report) {
+      final name = report.monthName.toLowerCase();
+      final short = report.monthShort.toLowerCase();
+      final yearStr = report.year.toString();
+      final monthNumStr = report.month.toString();
+      final monthPadStr = report.month.toString().padLeft(2, '0');
+      final combined = '$name $yearStr'.toLowerCase();
+      final shortCombined = '$short $yearStr'.toLowerCase();
+
+      const enNames = [
+        '', 'january', 'february', 'march', 'april', 'may', 'june',
+        'july', 'august', 'september', 'october', 'november', 'december'
+      ];
+      const enShorts = [
+        '', 'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+      ];
+      final enName = (report.month >= 1 && report.month <= 12)
+          ? enNames[report.month]
+          : '';
+      final enShort = (report.month >= 1 && report.month <= 12)
+          ? enShorts[report.month]
+          : '';
+
+      return name.contains(query) ||
+          short.contains(query) ||
+          yearStr.contains(query) ||
+          combined.contains(query) ||
+          shortCombined.contains(query) ||
+          enName.contains(query) ||
+          enShort.contains(query) ||
+          monthNumStr == query ||
+          monthPadStr == query;
+    }).toList();
   }
 
   String _formatRupiah(double amount) {
@@ -532,26 +581,171 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
                         ),
                         if (_reports.isNotEmpty)
                           Text(
-                            '${_reports.length} Bulan',
-                            style: const TextStyle(
+                            _searchQuery.isNotEmpty
+                                ? '${_filteredReports.length} Ditemukan'
+                                : '${_reports.length} Bulan',
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: _searchQuery.isNotEmpty &&
+                                      _filteredReports.isEmpty
+                                  ? AppColors.error
+                                  : AppColors.textSecondary,
                             ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 12),
 
+                    // ── Search Bar ───────────────────────────────────────────
+                    _buildSearchBar(),
+                    const SizedBox(height: 16),
+
                     // ── List Laporan / Empty State ───────────────────────────
                     if (_reports.isEmpty)
                       _buildEmptyState()
+                    else if (_filteredReports.isEmpty)
+                      _buildSearchEmptyState()
                     else
-                      _buildReportsGrid(),
+                      _buildReportsGrid(_filteredReports),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  // ── Search Bar Input ────────────────────────────────────────────────────────
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (val) {
+          setState(() {
+            _searchQuery = val;
+          });
+        },
+        style: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Cari laporan bulan atau tahun...',
+          hintStyle: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textMuted,
+          ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(
+                    Icons.clear_rounded,
+                    color: AppColors.textSecondary,
+                    size: 18,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── State jika hasil pencarian tidak ditemukan ──────────────────────────────
+
+  Widget _buildSearchEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border, width: 1.2),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: AppColors.inputBackground,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border, width: 1.5),
+            ),
+            child: const Icon(
+              Icons.search_off_rounded,
+              size: 28,
+              color: AppColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Laporan Tidak Ditemukan',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tidak ada laporan bulanan yang sesuai dengan "$_searchQuery".',
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () {
+              _searchController.clear();
+              setState(() => _searchQuery = '');
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Reset Pencarian'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: const BorderSide(color: AppColors.border, width: 1.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -610,11 +804,11 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
 
   // ── Grid 2 Column Kebawah ───────────────────────────────────────────────────
 
-  Widget _buildReportsGrid() {
+  Widget _buildReportsGrid(List<MonthlyReport> reports) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _reports.length,
+      itemCount: reports.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 12,
@@ -622,7 +816,7 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
         childAspectRatio: 0.82,
       ),
       itemBuilder: (context, index) {
-        final report = _reports[index];
+        final report = reports[index];
         final net = report.netBalance;
 
         return InkWell(
