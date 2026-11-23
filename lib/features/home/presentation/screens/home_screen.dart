@@ -10,6 +10,17 @@ import '../widgets/export_report_sheet.dart';
 import 'add_transaction_screen.dart';
 import 'monthly_reports_screen.dart';
 
+/// ============================================================================
+/// HomeScreen
+/// ============================================================================
+/// Tab utama (Beranda) aplikasi Cashifly.
+///
+/// Menampilkan:
+/// 1. Card Total Saldo Akun dengan tombol intip/sembunyikan nominal.
+/// 2. Ringkasan visual dompet aset (Uang Cash, Rekening Bank, E-Wallet).
+/// 3. Menu "Laporan Keuangan" (Arsip Bulanan Otomatis).
+/// 4. Menu "Ekspor Laporan Cepat" (Struk Cetak/Share PDF).
+/// 5. Riwayat transaksi terbaru.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

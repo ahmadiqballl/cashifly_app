@@ -2,6 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+/// ============================================================================
+/// AuthRepository
+/// ============================================================================
+/// Repository sentral untuk seluruh logika autentikasi pengguna:
+/// 1. Registrasi via Email & Password + pengiriman link verifikasi email otomatis.
+/// 2. Login via Email & Password atau Google Sign-In (OAuth).
+/// 3. Pemantauan perubahan status sesi autentikasi (`authStateChanges`).
+/// 4. Pembaruan profil (Nama Tampilan & Ganti Kata Sandi).
+/// 5. Logout pengguna dari Firebase dan Google.
 class AuthRepository {
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;

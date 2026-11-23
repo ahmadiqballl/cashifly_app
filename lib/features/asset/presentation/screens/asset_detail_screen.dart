@@ -5,6 +5,13 @@ import '../../../../core/database/models/asset_platform_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 import '../widgets/add_platform_sheet.dart';
 
+/// ============================================================================
+/// AssetDetailScreen
+/// ============================================================================
+/// Layanan untuk melihat rincian detail seluruh platform aset yang dimiliki pengguna:
+/// - Akumulasi saldo total seluruh platform.
+/// - Daftar kartu masing-masing dompet (Cash, Bank, E-Wallet) beserta saldonya.
+/// - Opsi untuk menambah platform baru via modal bottom sheet.
 class AssetDetailScreen extends StatefulWidget {
   const AssetDetailScreen({super.key});
 

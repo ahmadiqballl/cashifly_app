@@ -6,10 +6,15 @@ import '../../data/auth_repository.dart';
 import 'login_screen.dart';
 import 'verify_email_screen.dart';
 
-/// AuthGate serves as the security guard for routing.
-/// Unauthenticated users are routed to LoginScreen.
-/// Users whose email is not yet verified are directed to VerifyEmailScreen.
-/// Verified users are directed straight to DashboardScreen.
+/// ============================================================================
+/// AuthGate
+/// ============================================================================
+/// Komponen penjaga rute (Route Guard) aplikasi Cashifly.
+///
+/// Memanfaatkan `StreamBuilder` yang reaktif mendengarkan status sesi Firebase:
+/// - Jika belum login (`user == null`) -> navigasi otomatis ke [LoginScreen].
+/// - Jika sudah login namun email belum diverifikasi -> navigasi ke [VerifyEmailScreen].
+/// - Jika sudah login dan terverifikasi -> navigasi ke beranda utama [DashboardScreen].
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 

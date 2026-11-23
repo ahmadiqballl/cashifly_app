@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/data/auth_repository.dart';
 
+/// ============================================================================
+/// AccountScreen
+/// ============================================================================
+/// Layar Tab Akun & Pengaturan Pengguna:
+/// - Menampilkan info profil (Nama, Email, Avatar inisial).
+/// - Edit Nama Tampilan pengguna (sinkron ke Firebase Auth).
+/// - Ubah Kata Sandi (dengan reautentikasi kata sandi lama).
+/// - Informasi versi aplikasi & hak cipta.
+/// - Tombol Keluar (Sign Out) dari sesi akun saat ini.
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 

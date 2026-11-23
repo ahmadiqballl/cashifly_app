@@ -10,6 +10,18 @@ import '../../../home/presentation/screens/transfer_balance_screen.dart';
 import '../../../activity/presentation/screens/activity_screen.dart';
 import '../../../account/presentation/screens/account_screen.dart';
 
+/// ============================================================================
+/// DashboardScreen
+/// ============================================================================
+/// Induk navigasi utama aplikasi Cashifly.
+///
+/// Menyediakan:
+/// 1. Bottom Navigation Bar dengan 3 tab: Beranda (`HomeScreen`), Aktivitas (`ActivityScreen`), dan Akun (`AccountScreen`).
+/// 2. Floating Action Button (FAB) melayang dengan animasi expandable speed dial:
+///    - Tambah Pemasukan
+///    - Tambah Pengeluaran
+///    - Transfer Saldo
+///    - Tambah Platform Dompet Aset
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 

@@ -1,10 +1,13 @@
 import '../database_helper.dart';
 import '../models/asset_platform_model.dart';
 
-/// Repository untuk operasi CRUD platform aset.
+/// ============================================================================
+/// AssetRepository
+/// ============================================================================
+/// Repository untuk operasi CRUD platform dompet aset (Cash, Bank, E-Wallet).
 ///
-/// Setiap operasi **wajib** menyertakan [userId] sehingga
-/// data antar pengguna tidak pernah bercampur.
+/// Setiap operasi **wajib** menyertakan [userId] (UID Firebase Auth) sehingga
+/// data aset antar pengguna terisolasi dan tidak pernah bercampur.
 class AssetRepository {
   final DatabaseHelper _db;
 
@@ -13,7 +16,8 @@ class AssetRepository {
 
   // ── Create ─────────────────────────────────────────────────────────────────
 
-  /// Simpan platform baru. Mengembalikan id yang di-generate SQLite.
+  /// Menyimpan platform baru ke database SQLite.
+  /// Mengembalikan nilai primary key [id] yang di-generate otomatis.
   Future<int> insert(AssetPlatform platform) async {
     final db = await _db.database;
     return db.insert(
@@ -22,7 +26,8 @@ class AssetRepository {
     );
   }
 
-  /// Inisialisasi platform Cash default untuk user baru (jika belum ada).
+  /// Menginisialisasi platform dompet "Uang Cash" default untuk pengguna baru
+  /// saat pertama kali mendaftar, jika daftar platformnya masih kosong.
   Future<void> initDefaultCash(String userId) async {
     final existing = await getAll(userId);
     if (existing.isEmpty) {
@@ -38,7 +43,7 @@ class AssetRepository {
 
   // ── Read ───────────────────────────────────────────────────────────────────
 
-  /// Ambil semua platform milik [userId], urut berdasarkan id (urutan tambah).
+  /// Mengambil seluruh platform aset milik [userId], diurutkan secara ascending berdasarkan [id].
   Future<List<AssetPlatform>> getAll(String userId) async {
     final db = await _db.database;
     final rows = await db.query(
@@ -50,7 +55,8 @@ class AssetRepository {
     return rows.map(AssetPlatform.fromMap).toList();
   }
 
-  /// Ambil satu platform berdasarkan [id] milik [userId].
+  /// Mengambil satu platform aset berdasarkan [id] dan [userId].
+  /// Mengembalikan `null` jika platform tidak ditemukan.
   Future<AssetPlatform?> getById(int id, String userId) async {
     final db = await _db.database;
     final rows = await db.query(
@@ -63,7 +69,7 @@ class AssetRepository {
     return AssetPlatform.fromMap(rows.first);
   }
 
-  /// Total seluruh aset (jumlah semua balance) milik [userId].
+  /// Menghitung akumulasi total saldo seluruh aset yang dimiliki oleh [userId].
   Future<double> totalBalance(String userId) async {
     final db = await _db.database;
     final result = await db.rawQuery(
@@ -77,7 +83,7 @@ class AssetRepository {
 
   // ── Update ─────────────────────────────────────────────────────────────────
 
-  /// Perbarui balance platform (misalnya setelah transaksi).
+  /// Memperbarui nominal saldo pada platform tertentu berdasarkan [id] dan [userId].
   Future<int> updateBalance(int id, String userId, double balance) async {
     final db = await _db.database;
     return db.update(
@@ -90,12 +96,13 @@ class AssetRepository {
 
   // ── Delete ─────────────────────────────────────────────────────────────────
 
-  /// Hapus platform jika balance = 0 (tidak ada aset di sana).
-  /// Mengembalikan true jika berhasil dihapus, false jika balance > 0.
+  /// Menghapus platform aset dengan validasi saldo.
+  /// Hanya dapat dihapus jika saldonya bernilai 0 untuk menjaga integritas data keuangan.
+  /// Mengembalikan `true` jika berhasil dihapus, `false` jika masih terdapat saldo (> 0).
   Future<bool> delete(int id, String userId) async {
     final db = await _db.database;
 
-    // Cek apakah balance masih ada
+    // Validasi apakah saldo pada platform masih tersisa
     final rows = await db.query(
       DatabaseHelper.tableAssetPlatforms,
       where: 'id = ? AND user_id = ?',
@@ -105,7 +112,7 @@ class AssetRepository {
     if (rows.isEmpty) return false;
 
     final balance = (rows.first['balance'] as num).toDouble();
-    if (balance != 0) return false; // ada aset, tidak bisa dihapus
+    if (balance != 0) return false; // Masih ada aset, cegah penghapusan
 
     await db.delete(
       DatabaseHelper.tableAssetPlatforms,
@@ -115,7 +122,8 @@ class AssetRepository {
     return true;
   }
 
-  /// Cek apakah nama platform sudah ada untuk user ini (hindari duplikat).
+  /// Memeriksa apakah nama platform sudah pernah digunakan oleh [userId]
+  /// untuk mencegah duplikasi nama dompet (case-insensitive).
   Future<bool> nameExists(String userId, String name) async {
     final db = await _db.database;
     final rows = await db.query(

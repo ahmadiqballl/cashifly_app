@@ -8,6 +8,13 @@ import '../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../core/services/image_service.dart';
 import 'transaction_detail_screen.dart';
 
+/// ============================================================================
+/// ActivityScreen
+/// ============================================================================
+/// Layar Tab Aktivitas:
+/// - Sub-Tab 1 (Transaksi): Menampilkan seluruh riwayat transaksi (pemasukan, pengeluaran, transfer)
+///   secara terurut dari waktu terbaru, lengkap dengan filter kategori dan navigasi ke detail transaksi.
+/// - Sub-Tab 2 (Notifikasi): Menampilkan riwayat log notifikasi pencapaian (*milestone*) yang tersimpan di SQLite.
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
 

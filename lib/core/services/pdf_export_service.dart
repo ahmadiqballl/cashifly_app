@@ -14,6 +14,18 @@ enum ExportPeriodType {
   yearly,
 }
 
+/// ============================================================================
+/// PdfExportService
+/// ============================================================================
+/// Layanan ekspor dokumen finansial PDF dengan tema kustom:
+/// **Monochromatic Thermal Receipt Printer Style (Ala Struk Kasir / Struk Print).**
+///
+/// Fitur teknis:
+/// - Menggunakan font monospaced kustom (Courier style).
+/// - Layout struk memanjang dengan garis pembatas putus-putus (*dashed line*).
+/// - Menghitung rekapitulasi ringkasan (Pemasukan, Pengeluaran, Transfer, Saldo Bersih).
+/// - Terintegrasi dengan native Android/iOS print spooler (`Printing.layoutPdf`)
+///   dan native document sharing intent (`Printing.sharePdf`).
 class PdfExportService {
   PdfExportService._internal();
   static final PdfExportService instance = PdfExportService._internal();

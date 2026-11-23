@@ -5,24 +5,31 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-/// Service untuk mengelola gambar transaksi:
-/// - Ambil dari kamera atau galeri
-/// - Kompresi (max 800px, quality 75)
-/// - Simpan ke direktori privat app (bukan BLOB)
-/// - Cleanup otomatis: hapus file lama & file orphan
+/// ============================================================================
+/// ImageService
+/// ============================================================================
+/// Layanan (Service) untuk mengelola file gambar attachment bukti struk transaksi:
+/// 1. Mengambil foto dari Kamera atau Galeri perangkat (`image_picker`).
+/// 2. Mengompresi resolusi gambar (max 800px, kualitas 75%) agar hemat ruang memori.
+/// 3. Menyimpan file gambar ke direktori privat aplikasi (bukan disimpan mentah sebagai BLOB SQLite).
+/// 4. Menyediakan fitur *housekeeping* / *cleanup* otomatis untuk menghapus gambar tak terpakai (*orphan files*).
 class ImageService {
   ImageService._();
   static final ImageService instance = ImageService._();
 
+  /// Batas resolusi maksimal sisi terpanjang gambar (dalam piksel).
   static const int _maxDimension = 800;
+
+  /// Kualitas kompresi JPEG (0-100%). Nilai 75 memberikan rasio ukuran/kualitas optimal.
   static const int _quality = 75;
 
-  /// Nama subdirektori di dalam app documents directory
+  /// Nama subdirektori di dalam folder documents aplikasi untuk menyimpan gambar.
   static const String _subDir = 'transaction_images';
 
-  // ── Direktori ──────────────────────────────────────────────────────────────
+  // ── Akses Direktori Lokal ──────────────────────────────────────────────────
 
-  /// Kembalikan direktori penyimpanan gambar, buat jika belum ada.
+  /// Mengembalikan objek [Directory] tempat penyimpanan gambar di HP.
+  /// Otomatis membuat folder tersebut jika belum ada.
   Future<Directory> _getImagesDir() async {
     final appDir = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(appDir.path, _subDir));
@@ -30,10 +37,12 @@ class ImageService {
     return dir;
   }
 
-  // ── Pick & Compress ────────────────────────────────────────────────────────
+  // ── Ambil Gambar & Kompresi ────────────────────────────────────────────────
 
-  /// Buka picker (kamera atau galeri), kompresi, dan simpan.
-  /// Mengembalikan path absolut file yang telah dikompresi, atau null jika batal.
+  /// Membuka dialog pemilih gambar (Kamera atau Galeri), melakukan kompresi,
+  /// dan menyimpannya ke penyimpanan lokal aplikasi.
+  ///
+  /// Mengembalikan path absolut file hasil kompresi, atau `null` jika pengguna membatalkan aksi.
   Future<String?> pickAndCompress(ImageSource source) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
@@ -46,11 +55,11 @@ class ImageService {
     return _compressAndSave(picked.path);
   }
 
-  /// Kompresi file dari [sourcePath] dan simpan ke direktori app.
+  /// Melakukan kompresi dari path file mentah [sourcePath] dan menyimpannya dengan nama unik.
   Future<String?> _compressAndSave(String sourcePath) async {
     final dir = await _getImagesDir();
-    final fileName =
-        'tx_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    // Penamaan file menggunakan timestamp untuk menjamin keunikan nama
+    final fileName = 'tx_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final destPath = p.join(dir.path, fileName);
 
     final result = await FlutterImageCompress.compressAndGetFile(
@@ -65,21 +74,21 @@ class ImageService {
     return result?.path;
   }
 
-  // ── Delete single ──────────────────────────────────────────────────────────
+  // ── Hapus Gambar Tunggal ───────────────────────────────────────────────────
 
-  /// Hapus file gambar berdasarkan path. No-op jika file tidak ada.
+  /// Menghapus satu file gambar fisik berdasarkan path absolutnya.
   Future<void> deleteImage(String? imagePath) async {
     if (imagePath == null || imagePath.isEmpty) return;
     final file = File(imagePath);
     if (file.existsSync()) file.deleteSync();
   }
 
-  // ── Cleanup ────────────────────────────────────────────────────────────────
+  // ── Pembersihan Sampah File (Housekeeping) ─────────────────────────────────
 
-  /// Hapus semua gambar di direktori yang tidak ada di [knownPaths].
+  /// Membersihkan file gambar *orphan* (file foto yang ada di folder tetapi transaksinya sudah terhapus di database).
   ///
-  /// Panggil ini setelah memuat daftar transaksi, sehingga file orphan
-  /// (gambar dari transaksi yang sudah dihapus) ikut dibersihkan.
+  /// Parameter:
+  /// - [knownPaths]: Himpunan seluruh path gambar transaksi yang saat ini masih valid di SQLite.
   Future<void> cleanupOrphans(Set<String> knownPaths) async {
     final dir = await _getImagesDir();
     final files = dir.listSync().whereType<File>();
@@ -90,9 +99,7 @@ class ImageService {
     }
   }
 
-  /// Hapus gambar yang lebih tua dari [maxAge] (default 30 hari).
-  ///
-  /// Berguna sebagai safety net untuk file yang terlupa.
+  /// Menghapus file gambar yang usianya sudah melebihi batas waktu [maxAge] (default: 30 hari).
   Future<void> cleanupOldFiles({
     Duration maxAge = const Duration(days: 30),
   }) async {
@@ -106,7 +113,7 @@ class ImageService {
           file.deleteSync();
         }
       } catch (_) {
-        // Abaikan error per-file agar tidak menghentikan proses
+        // Abaikan error per-file agar proses pembersihan tidak terputus
       }
     }
   }

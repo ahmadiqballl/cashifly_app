@@ -6,6 +6,13 @@ import '../../../../core/database/models/asset_platform_model.dart';
 import '../../../../core/database/models/transaction_model.dart';
 import '../../../../core/database/repositories/asset_repository.dart';
 
+/// ============================================================================
+/// TransactionDetailScreen
+/// ============================================================================
+/// Layar untuk menginspeksi rincian detail satu transaksi secara lengkap:
+/// - Kategori, tipe (Pemasukan / Pengeluaran / Transfer), nominal, tanggal & jam.
+/// - Platform dompet asal dan platform tujuan (khusus transfer).
+/// - Preview foto bukti struk belanja lokal yang dapat diklik untuk memperbesar gambar.
 class TransactionDetailScreen extends StatefulWidget {
   final TransactionModel transaction;
 

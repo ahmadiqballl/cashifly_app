@@ -13,6 +13,15 @@ import '../../../../core/services/image_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../asset/presentation/screens/asset_detail_screen.dart';
 
+/// ============================================================================
+/// AddTransactionScreen
+/// ============================================================================
+/// Layanan input formulir untuk mencatat transaksi baru:
+/// - Pemasukan (Income) atau Pengeluaran (Expense)
+/// - Pemilihan kategori transaksi
+/// - Pemilihan dompet/platform aset yang terpengaruh
+/// - Pemilihan tanggal & waktu
+/// - Lampiran foto bukti struk belanja (kamera / galeri dengan kompresi otomatis)
 class AddTransactionScreen extends StatefulWidget {
   /// [initialType] menentukan apakah layar dibuka untuk pengeluaran atau pemasukan.
   final TransactionType initialType;

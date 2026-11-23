@@ -2,10 +2,14 @@ import '../database_helper.dart';
 import '../models/asset_platform_model.dart';
 import '../models/transaction_model.dart';
 
-/// Repository untuk operasi CRUD transaksi keuangan.
+/// ============================================================================
+/// TransactionRepository
+/// ============================================================================
+/// Repository utama untuk mengelola seluruh operasi CRUD transaksi keuangan
+/// (Pemasukan, Pengeluaran, dan Transfer Antar-Platform).
 ///
-/// Setiap operasi **wajib** menyertakan [userId] (UID Firebase Auth)
-/// sehingga data antar pengguna tidak pernah bercampur.
+/// Setiap kueri wajib menyertakan [userId] (UID Firebase Auth) sehingga data 
+/// transaksi terisolasi sepenuhnya per pengguna.
 class TransactionRepository {
   final DatabaseHelper _db;
 
@@ -14,7 +18,8 @@ class TransactionRepository {
 
   // ── Create ─────────────────────────────────────────────────────────────────
 
-  /// Simpan transaksi baru. Mengembalikan id yang di-generate SQLite.
+  /// Menyimpan satu baris data transaksi ke tabel SQLite.
+  /// Mengembalikan nilai primary key [id] transaksi yang baru dibuat.
   Future<int> insert(TransactionModel transaction) async {
     final db = await _db.database;
     return db.insert(
@@ -23,10 +28,11 @@ class TransactionRepository {
     );
   }
 
-  /// Simpan transaksi dan perbarui saldo platform secara atomik dalam satu transaksi DB.
+  /// Menyimpan transaksi sekaligus memperbarui saldo dompet secara **atomik**
+  /// dalam satu blok transaksi database (`db.transaction`).
   ///
-  /// - [income]: menambah saldo platform
-  /// - [expense]: mengurangi saldo platform (boleh negatif jika dikehendaki)
+  /// - Jika bertipe [TransactionType.income]: menambah saldo platform.
+  /// - Jika bertipe [TransactionType.expense]: mengurangi saldo platform.
   Future<int> insertWithBalanceUpdate({
     required TransactionModel transaction,
     required AssetPlatform platform,
@@ -34,15 +40,18 @@ class TransactionRepository {
     final db = await _db.database;
     late int txId;
     await db.transaction((txn) async {
+      // 1. Simpan baris transaksi
       txId = await txn.insert(
         DatabaseHelper.tableTransactions,
         transaction.toMap(),
       );
 
+      // 2. Hitung selisih perubahan saldo
       final delta = transaction.type == TransactionType.income
           ? transaction.amount
           : -transaction.amount;
 
+      // 3. Mutasi saldo platform
       await txn.update(
         DatabaseHelper.tableAssetPlatforms,
         {'balance': platform.balance + delta},
@@ -53,11 +62,14 @@ class TransactionRepository {
     return txId;
   }
 
-  /// Pindahkan saldo antar dua platform secara atomik dalam satu transaksi database.
+  /// Memindahkan saldo antar dua platform dompet secara **atomik (ACID-compliant)**
+  /// dalam satu transaksi database SQLite tunggal.
   ///
-  /// - Mengurangi saldo [fromPlatform] sebesar `transaction.amount`
-  /// - Menambah saldo [toPlatform] sebesar `transaction.amount`
-  /// - Mencatat riwayat transaksi bertipe `TransactionType.transfer`
+  /// Menjamin integritas data:
+  /// - Mengurangi saldo [fromPlatform] sebesar `transaction.amount`.
+  /// - Menambah saldo [toPlatform] sebesar `transaction.amount`.
+  /// - Mencatat riwayat transaksi bertipe `TransactionType.transfer`.
+  /// Jika terjadi kegagalan sistem, seluruh mutasi dibatalkan (*rollback*).
   Future<int> transferWithBalanceUpdate({
     required TransactionModel transaction,
     required AssetPlatform fromPlatform,
@@ -66,12 +78,13 @@ class TransactionRepository {
     final db = await _db.database;
     late int txId;
     await db.transaction((txn) async {
+      // 1. Catat riwayat transfer di tabel transaksi
       txId = await txn.insert(
         DatabaseHelper.tableTransactions,
         transaction.toMap(),
       );
 
-      // Kurangi saldo dari platform sumber
+      // 2. Kurangi saldo dari platform sumber/pengirim
       await txn.update(
         DatabaseHelper.tableAssetPlatforms,
         {'balance': fromPlatform.balance - transaction.amount},
@@ -79,7 +92,7 @@ class TransactionRepository {
         whereArgs: [fromPlatform.id, fromPlatform.userId],
       );
 
-      // Tambah saldo ke platform tujuan
+      // 3. Tambahkan saldo ke platform tujuan/penerima
       await txn.update(
         DatabaseHelper.tableAssetPlatforms,
         {'balance': toPlatform.balance + transaction.amount},
@@ -92,9 +105,7 @@ class TransactionRepository {
 
   // ── Read ───────────────────────────────────────────────────────────────────
 
-  /// Ambil transaksi milik [userId] dalam 14 hari terakhir, diurutkan terbaru.
-  /// Sekaligus menghapus transaksi yang lebih tua dari 14 hari dari tabel log
-  /// (tabel transactions sendiri tidak dihapus — hanya query dibatasi).
+  /// Mengambil transaksi milik [userId] dalam 14 hari terakhir, diurutkan dari yang terbaru.
   Future<List<TransactionModel>> getRecent14Days(String userId) async {
     final now = DateTime.now();
     final from = now.subtract(const Duration(days: 14));
@@ -105,7 +116,7 @@ class TransactionRepository {
     return getByDateRange(userId, from: fromStr, to: toStr);
   }
 
-  /// Ambil semua transaksi milik [userId], diurutkan terbaru di atas.
+  /// Mengambil seluruh data transaksi milik [userId], diurutkan tanggal & id terbaru di atas.
   Future<List<TransactionModel>> getAll(String userId) async {
     final db = await _db.database;
     final rows = await db.query(
@@ -117,9 +128,8 @@ class TransactionRepository {
     return rows.map(TransactionModel.fromMap).toList();
   }
 
-  /// Ambil transaksi milik [userId] dalam rentang tanggal tertentu.
-  ///
-  /// [from] dan [to] dalam format "YYYY-MM-DD".
+  /// Mengambil transaksi milik [userId] dalam rentang tanggal tertentu ([from] s/d [to]).
+  /// Format tanggal: "YYYY-MM-DD".
   Future<List<TransactionModel>> getByDateRange(
     String userId, {
     required String from,
@@ -135,7 +145,7 @@ class TransactionRepository {
     return rows.map(TransactionModel.fromMap).toList();
   }
 
-  /// Ambil satu transaksi berdasarkan [id], pastikan milik [userId].
+  /// Mengambil satu transaksi berdasarkan [id] spesifik milik [userId].
   Future<TransactionModel?> getById(int id, String userId) async {
     final db = await _db.database;
     final rows = await db.query(
@@ -148,25 +158,26 @@ class TransactionRepository {
     return TransactionModel.fromMap(rows.first);
   }
 
-  // ── Summary ────────────────────────────────────────────────────────────────
+  // ── Summary & Agregasi ─────────────────────────────────────────────────────
 
-  /// Total pemasukan milik [userId].
+  /// Menghitung akumulasi seluruh nominal pemasukan milik [userId].
   Future<double> totalIncome(String userId) async {
     return _sumByType(userId, TransactionType.income);
   }
 
-  /// Total pengeluaran milik [userId].
+  /// Menghitung akumulasi seluruh nominal pengeluaran milik [userId].
   Future<double> totalExpense(String userId) async {
     return _sumByType(userId, TransactionType.expense);
   }
 
-  /// Saldo = pemasukan - pengeluaran
+  /// Menghitung saldo bersih total (Total Pemasukan - Total Pengeluaran).
   Future<double> balance(String userId) async {
     final income = await totalIncome(userId);
     final expense = await totalExpense(userId);
     return income - expense;
   }
 
+  /// Fungsi utilitas internal untuk menjumlahkan nominal transaksi berdasarkan tipenya.
   Future<double> _sumByType(String userId, TransactionType type) async {
     final db = await _db.database;
     final result = await db.rawQuery(
@@ -180,7 +191,8 @@ class TransactionRepository {
 
   // ── Update ─────────────────────────────────────────────────────────────────
 
-  /// Perbarui transaksi yang sudah ada. Mengembalikan jumlah baris yang terpengaruh.
+  /// Memperbarui informasi transaksi yang sudah ada.
+  /// Mengembalikan jumlah baris di database yang berhasil diperbarui.
   Future<int> update(TransactionModel transaction) async {
     assert(transaction.id != null, 'id harus ada untuk update');
     final db = await _db.database;
@@ -194,7 +206,7 @@ class TransactionRepository {
 
   // ── Delete ─────────────────────────────────────────────────────────────────
 
-  /// Hapus satu transaksi berdasarkan [id], pastikan milik [userId].
+  /// Menghapus satu transaksi tertentu berdasarkan [id] milik [userId].
   Future<int> delete(int id, String userId) async {
     final db = await _db.database;
     return db.delete(
@@ -204,7 +216,7 @@ class TransactionRepository {
     );
   }
 
-  /// Hapus semua transaksi milik [userId] (misal saat akun dihapus).
+  /// Menghapus seluruh transaksi milik [userId] (digunakan saat opsi reset data).
   Future<int> deleteAll(String userId) async {
     final db = await _db.database;
     return db.delete(

@@ -1,21 +1,27 @@
 import '../database_helper.dart';
 import '../models/notification_log_model.dart';
 
-/// Repository untuk log notifikasi milestone.
+/// ============================================================================
+/// NotificationLogRepository
+/// ============================================================================
+/// Repository untuk mengelola riwayat log notifikasi lokal di perangkat.
 ///
-/// Setiap entry hanya disimpan selama 14 hari — lebih dari itu otomatis dihapus
-/// saat [insert] atau [getAll] dipanggil.
+/// Mengimplementasikan kebijakan retensi data otomatis:
+/// Setiap entri log hanya disimpan selama 14 hari. Entri yang lebih tua dari itu
+/// akan otomatis dihapus (*auto purge*) saat fungsi [insert] atau [getAll] dipanggil.
 class NotificationLogRepository {
   final DatabaseHelper _db;
 
   NotificationLogRepository({DatabaseHelper? db})
       : _db = db ?? DatabaseHelper.instance;
 
+  /// Batas masa simpan log notifikasi (14 hari).
   static const int _retentionDays = 14;
 
   // ── Create ─────────────────────────────────────────────────────────────────
 
-  /// Simpan log notifikasi baru, sekaligus bersihkan entri yang sudah kadaluarsa.
+  /// Menyimpan log notifikasi baru ke database SQLite, 
+  /// sekaligus membersihkan entri notifikasi lama yang sudah melewati batas retensi.
   Future<void> insert(NotificationLog log) async {
     final db = await _db.database;
     await db.insert(DatabaseHelper.tableNotificationLog, log.toMap());
@@ -24,8 +30,8 @@ class NotificationLogRepository {
 
   // ── Read ───────────────────────────────────────────────────────────────────
 
-  /// Ambil semua log notifikasi milik [userId] dalam 14 hari terakhir,
-  /// diurutkan terbaru di atas. Sekaligus bersihkan yang kadaluarsa.
+  /// Mengambil seluruh riwayat log notifikasi milik [userId] dalam 14 hari terakhir,
+  /// diurutkan dari waktu terbaru ke terlama.
   Future<List<NotificationLog>> getAll(String userId) async {
     final db = await _db.database;
     await _deleteExpired(db, userId);
@@ -38,9 +44,9 @@ class NotificationLogRepository {
     return rows.map(NotificationLog.fromMap).toList();
   }
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
+  // ── Delete (Pembersihan Otomatis) ──────────────────────────────────────────
 
-  /// Hapus semua log milik [userId] yang lebih tua dari [_retentionDays] hari.
+  /// Menghapus seluruh entri log milik [userId] yang berusia lebih dari [_retentionDays] hari.
   Future<void> _deleteExpired(dynamic db, String userId) async {
     final cutoff = DateTime.now()
         .subtract(const Duration(days: _retentionDays))

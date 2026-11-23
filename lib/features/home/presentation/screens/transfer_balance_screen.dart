@@ -12,6 +12,14 @@ import '../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../core/services/image_service.dart';
 import '../../../asset/presentation/widgets/add_platform_sheet.dart';
 
+/// ============================================================================
+/// TransferBalanceScreen
+/// ============================================================================
+/// Layanan untuk memindahkan dana/saldo antar dua platform dompet aset:
+/// - Memilih platform sumber (From) dan platform tujuan (To).
+/// - Tombol Swap untuk membalik arah transfer secara cepat.
+/// - Validasi kecukupan saldo platform sumber sebelum mutasi dieksekusi.
+/// - Menjalankan mutasi saldo secara atomik via `TransactionRepository.transferWithBalanceUpdate`.
 class TransferBalanceScreen extends StatefulWidget {
   const TransferBalanceScreen({super.key});
 
